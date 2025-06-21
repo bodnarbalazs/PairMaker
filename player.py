@@ -36,6 +36,7 @@ class Player:
     is_fast: int
     is_balanced: int
     is_cunning: int
+    group: int = -1
     dislikes: List[str] = field(default_factory=list)
 
     # ---------------------------------------------------------------------
@@ -47,7 +48,7 @@ class Player:
         """Load a CSV file and return a list of ``Player`` instances.
 
         Expected columns (case-sensitive):
-            name, base_swing, net_work, serve, is_fast, is_balanced, is_cunning, dislikes
+            name, base_swing, net_work, serve, is_fast, is_balanced, is_cunning, group, dislikes
         The *dislikes* column can contain zero or more names separated by semicolons.
         """
         players: List["Player"] = []
@@ -57,6 +58,7 @@ class Player:
                 try:
                     dislikes_raw = row.get("dislikes", "") or ""
                     dislikes = [s.strip() for s in dislikes_raw.split(";") if s.strip()]
+                    group_val = int(row.get("group", -1)) if row.get("group", "").strip() else -1
                     players.append(
                         cls(
                             name=row["name"].strip(),
@@ -66,6 +68,7 @@ class Player:
                             is_fast=int(row["is_fast"]),
                             is_balanced=int(row["is_balanced"]),
                             is_cunning=int(row["is_cunning"]),
+                            group=group_val,
                             dislikes=dislikes,
                         )
                     )
@@ -100,5 +103,5 @@ class Player:
             "Player("
             f"name={self.name!r}, base_swing={self.base_swing}, net_work={self.net_work}, "
             f"serve={self.serve}, is_fast={self.is_fast}, is_balanced={self.is_balanced}, "
-            f"is_cunning={self.is_cunning}, dislikes={self.dislikes!r})"
+            f"is_cunning={self.is_cunning}, group={self.group}, dislikes={self.dislikes!r})"
         )

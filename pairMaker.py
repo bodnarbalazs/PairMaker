@@ -52,13 +52,12 @@ def _pair_strength(p1: Player, p2: Player) -> int:
     return int(round(total * 100))
 
 
-def optimal_team_assignment(players: List[Player]):
-    """Find an assignment of players into pairs minimizing strength difference.
+def optimal_team_assignment(players: List[Player], group_count: int = 1):
+    """Find an assignment of players into *group_count* groups of pairs.
 
-    Parameters
-    ----------
-    players : List[Player]
-        Even-sized list of Player objects.
+    Each player appears in exactly one pair.  Groups can have different sizes.
+    The objective is to minimise the *sum* over groups of (max_strength - min_strength).
+    A player's ``group`` attribute can fix them to a specific group (≥0) or -1 for free.
     """
     assert len(players) % 2 == 0, "Must be even number of players"
     n = len(players)
@@ -67,17 +66,46 @@ def optimal_team_assignment(players: List[Player]):
     model = cp_model.CpModel()
     x = {}  # x[i][j] = 1 if players i and j are in a team
 
-    # Pre-compute pair strengths and create decision variables for each pair
+    # Pre-compute pair strengths and decision vars
     pair_strength_value = {}
     for i in range(n):
         for j in range(i + 1, n):
             x[(i, j)] = model.NewBoolVar(f"x_{i}_{j}")
             pair_strength_value[(i, j)] = _pair_strength(players[i], players[j])
-            # Enforce dislike constraints: if either player refuses the other, forbid the pair
+            # Enforce dislike constraints
             if players[i].dislikes_player(players[j]) or players[j].dislikes_player(players[i]):
                 model.Add(x[(i, j)] == 0)
 
-    # Each player appears in exactly one pair
+    # Player-to-group assignment variables (one-hot)
+    g = {}
+    for i in range(n):
+        for k in range(group_count):
+            g[(i, k)] = model.NewBoolVar(f"g_{i}_{k}")
+        model.Add(sum(g[(i, k)] for k in range(group_count)) == 1)  # one group per player
+        if players[i].group >= 0:
+            # fixed group
+            for k in range(group_count):
+                if k == players[i].group:
+                    model.Add(g[(i, k)] == 1)
+                else:
+                    model.Add(g[(i, k)] == 0)
+
+    # Link pair selection to common group via auxiliary y[i,j,k]
+    y = {}
+    for (i, j), pair_var in x.items():
+        for k in range(group_count):
+            y[(i, j, k)] = model.NewBoolVar(f"y_{i}_{j}_{k}")
+            # y implies pair chosen and both players in group k
+            model.Add(y[(i, j, k)] <= pair_var)
+            model.Add(y[(i, j, k)] <= g[(i, k)])
+            model.Add(y[(i, j, k)] <= g[(j, k)])
+            # If pair chosen and both players in group, y can be 1: ensure consistency
+            model.Add(pair_var + g[(i, k)] + g[(j, k)] - 2 <= y[(i, j, k)])
+        # Ensure pair is assigned to exactly one group when chosen
+        model.Add(sum(y[(i, j, k)] for k in range(group_count)) == pair_var)
+
+
+    # Each player appears in exactly one pair (across all groups)
     for i in range(n):
         model.Add(sum(x[min(i, j), max(i, j)] for j in range(n) if i != j) == 1)
 
@@ -93,22 +121,28 @@ def optimal_team_assignment(players: List[Player]):
         model.Add(ts == 0).OnlyEnforceIf(var.Not())
         team_strengths[(i, j)] = ts
 
-    # Define max and min team strength over CHOSEN teams only
-    max_strength = model.NewIntVar(0, total_strength_cap, "max_strength")
-    min_strength = model.NewIntVar(0, total_strength_cap, "min_strength")
+    # Group-specific max / min
+    max_strength_g = {}
+    min_strength_g = {}
+    for k in range(group_count):
+        max_strength_g[k] = model.NewIntVar(0, total_strength_cap, f"max_strength_{k}")
+        min_strength_g[k] = model.NewIntVar(0, total_strength_cap, f"min_strength_{k}")
+        model.Add(min_strength_g[k] <= max_strength_g[k])
 
-    # Link min/max strength only to selected pairs by using conditional constraints
-    for (i, j), var in x.items():
-        ts = team_strengths[(i, j)]
-        # If the pair is selected, it must respect the current max/min bounds
-        model.Add(ts <= max_strength).OnlyEnforceIf(var)
-        model.Add(ts >= min_strength).OnlyEnforceIf(var)
+    # Strength variables per pair per group with conditional bounds
+    for (i, j), base_ts_var in team_strengths.items():
+        for k in range(group_count):
+            indicator = y[(i, j, k)]
+            # pair strength variable equals base only if indicator true, else 0
+            ts_g = model.NewIntVar(0, total_strength_cap, f"ts_{i}_{j}_{k}")
+            model.Add(ts_g == base_ts_var).OnlyEnforceIf(indicator)
+            model.Add(ts_g == 0).OnlyEnforceIf(indicator.Not())
+            # bind to group max/min
+            model.Add(ts_g <= max_strength_g[k]).OnlyEnforceIf(indicator)
+            model.Add(ts_g >= min_strength_g[k]).OnlyEnforceIf(indicator)
 
-    # Ensure min_strength is never greater than max_strength (optional safety)
-    model.Add(min_strength <= max_strength)
-
-    # Objective: minimize difference
-    model.Minimize(max_strength - min_strength)
+    # Objective: minimise sum over groups of spreads
+    model.Minimize(sum(max_strength_g[k] - min_strength_g[k] for k in range(group_count)))
 
     # Solve
     solver = cp_model.CpSolver()
@@ -116,15 +150,22 @@ def optimal_team_assignment(players: List[Player]):
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        teams = []
+        teams_by_group = {k: [] for k in range(group_count)}
         for (i, j), var in x.items():
             if solver.Value(var):
-                teams.append(((i, players[i]), (j, players[j])))
-        return {
-            "teams": teams,
-            "max_strength": solver.Value(max_strength) / 100.0,
-            "min_strength": solver.Value(min_strength) / 100.0,
-            "diff": solver.Value(max_strength - min_strength) / 100.0
+                # find group for this pair
+                for k in range(group_count):
+                    if solver.Value(y[(i, j, k)]):
+                        teams_by_group[k].append((players[i], players[j]))
+                        break
+        result = {
+            "groups": teams_by_group,
+            "spread_per_group": {
+                k: (solver.Value(max_strength_g[k]) - solver.Value(min_strength_g[k])) / 100.0
+                for k in range(group_count)
+            },
+            "objective": solver.ObjectiveValue() / 100.0,
         }
+        return result
     else:
         return None
