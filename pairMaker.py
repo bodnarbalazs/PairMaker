@@ -10,39 +10,46 @@ def _norm(val: int) -> float:
     return val / 3.0
 
 
-def _pair_strength(p1: Player, p2: Player) -> int:
-    """Compute pair strength using the new model; returns an *integer* score.
+def pair_breakdown(p1: Player, p2: Player):
+    """Return detailed strength breakdown for a (p1, p2) pair as a dict."""
+    n_p1_serve = _norm(p1.serve)
+    n_p1_base = _norm(p1.base_swing)
+    n_p1_net = _norm(p1.net_work)
+    n_p2_serve = _norm(p2.serve)
+    n_p2_base = _norm(p2.base_swing)
+    n_p2_net = _norm(p2.net_work)
 
-    The formula contains fractional terms; multiply final value by 100 and
-    round so we can work with an integer CP-SAT model.
-    """
-    # Normalize 1-3 attributes
-    norm_p1_serve = _norm(p1.serve)
-    norm_p1_base = _norm(p1.base_swing)
-    norm_p1_net = _norm(p1.net_work)
+    # Components
+    comp_p1_serves = (n_p1_serve + n_p1_base + 0.5) * (n_p2_net + 1)
+    comp_p2_serves = (n_p2_serve + n_p2_base + 0.5) * (n_p1_net + 1)
+    comp_opponent_serves = (n_p1_base + 1) * (n_p2_net + 1) + (n_p2_base + 1) * (n_p1_net + 1)
 
-    norm_p2_serve = _norm(p2.serve)
-    norm_p2_base = _norm(p2.base_swing)
-    norm_p2_net = _norm(p2.net_work)
-
-    score = (
-        (norm_p1_serve + norm_p1_base + 0.5) * (norm_p2_net + 1)
-        + (norm_p1_base + 1) * (norm_p2_net + 1)
-        + (norm_p2_base + 1) * (norm_p1_net + 1)
-        + (norm_p2_serve + norm_p2_base + 0.5) * (norm_p1_net + 1)
-        + p1.is_fast + p2.is_fast
-        + p1.is_balanced + p2.is_balanced
-        + p1.is_cunning + p2.is_cunning
+    bonus = (
+        p1.is_fast + p2.is_fast + p1.is_balanced + p2.is_balanced + p1.is_cunning + p2.is_cunning
     )
 
-    # Penalties
+    penalties = 0
     if p1.is_fast == 0 and p2.is_fast == 0:
-        score -= 1
+        penalties += 1
     if p1.is_balanced == 0 and p2.is_balanced == 0:
-        score -= 1
+        penalties += 1
 
-    # Scale to int (×100) for CP-SAT integer vars
-    return int(round(score * 100))
+    total = comp_p1_serves + comp_p2_serves + comp_opponent_serves + bonus - penalties
+
+    return {
+        "p1_serves": comp_p1_serves,
+        "p2_serves": comp_p2_serves,
+        "opponent_serves": comp_opponent_serves,
+        "bonus": bonus,
+        "penalties": penalties,
+        "total": total,
+    }
+
+
+def _pair_strength(p1: Player, p2: Player) -> int:
+    """Wrapper around ``pair_breakdown`` returning an int ×100 for CP-SAT."""
+    total = pair_breakdown(p1, p2)["total"]
+    return int(round(total * 100))
 
 
 def optimal_team_assignment(players: List[Player]):
