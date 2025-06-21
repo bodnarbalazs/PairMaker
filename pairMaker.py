@@ -52,7 +52,7 @@ def _pair_strength(p1: Player, p2: Player) -> int:
     return int(round(total * 100))
 
 
-def optimal_team_assignment(players: List[Player], group_count: int = 1):
+def optimal_team_assignment(players: List[Player], group_count: int = 1, top_k: int = 1):
     """Find an assignment of players into *group_count* groups of pairs.
 
     Each player appears in exactly one pair.  Groups can have different sizes.
@@ -144,28 +144,39 @@ def optimal_team_assignment(players: List[Player], group_count: int = 1):
     # Objective: minimise sum over groups of spreads
     model.Minimize(sum(max_strength_g[k] - min_strength_g[k] for k in range(group_count)))
 
-    # Solve
-    solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 10.0
-    status = solver.Solve(model)
+    # Collect up to top_k solutions by iterative blocking.
+    solutions = []
+    iteration = 0
+    while iteration < top_k:
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = 10.0
+        status = solver.Solve(model)
+        if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            break  # no more solutions
 
-    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        # --- extract solution ---
         teams_by_group = {k: [] for k in range(group_count)}
+        chosen_pairs = []
         for (i, j), var in x.items():
             if solver.Value(var):
-                # find group for this pair
+                chosen_pairs.append((i, j))
                 for k in range(group_count):
                     if solver.Value(y[(i, j, k)]):
                         teams_by_group[k].append((players[i], players[j]))
                         break
-        result = {
-            "groups": teams_by_group,
-            "spread_per_group": {
-                k: (solver.Value(max_strength_g[k]) - solver.Value(min_strength_g[k])) / 100.0
-                for k in range(group_count)
-            },
-            "objective": solver.ObjectiveValue() / 100.0,
-        }
-        return result
-    else:
-        return None
+        solutions.append(
+            {
+                "groups": teams_by_group,
+                "spread_per_group": {
+                    k: (solver.Value(max_strength_g[k]) - solver.Value(min_strength_g[k])) / 100.0
+                    for k in range(group_count)
+                },
+                "objective": solver.ObjectiveValue() / 100.0,
+            }
+        )
+
+        # --- add blocking constraint to forbid this exact assignment ---
+        model.Add(sum(x[pair] for pair in chosen_pairs) <= len(chosen_pairs) - 1)
+        iteration += 1
+
+    return solutions if solutions else None
