@@ -1,7 +1,7 @@
 from player import Player
 from pairMaker import optimal_team_assignment, pair_breakdown
 
-players = Player.load_csv("sample_players.csv")
+players = Player.load_csv("players.csv")
 try:
     group_count = int(input("Enter number of groups (default 1): ") or 1)
 except (ValueError, EOFError):
