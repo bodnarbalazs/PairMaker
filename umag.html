@@ -646,18 +646,20 @@
             color: var(--c-bg);
         }
 
-        /* Visited indicator: small dot on the left of nodes the user has expanded */
-        .tree-row.is-visited::before {
+        /* "Unread" indicator: small dot in the left gutter, marking nodes
+           with collapsed children the user hasn't opened yet. Disappears
+           as soon as the node is expanded. */
+        .tree-row.has-unread::before {
             content: '';
             position: absolute;
-            left: -0.55rem;
+            left: -0.6rem;
             top: 50%;
-            width: 5px;
-            height: 5px;
-            background: var(--c-green-mid);
+            width: 6px;
+            height: 6px;
+            background: var(--c-clay);
             border-radius: 50%;
             transform: translateY(-50%);
-            opacity: 0.7;
+            box-shadow: 0 0 0 3px var(--c-surface);
         }
 
         /* Section-target highlight on scroll-to */
@@ -680,11 +682,30 @@
 
         /* Tree responsive */
         @media (max-width: 600px) {
-            .decision-tree { padding: 1rem 0.9rem 1.3rem; }
-            .tree-children { padding-left: 1rem; margin-left: 0.5rem; }
-            .tree-row { padding: 0.5rem 0.4rem; }
+            .decision-tree { padding: 0.85rem 0.7rem 1.1rem; }
+            .tree-children {
+                padding-left: 0.55rem;
+                margin-left: 0.3rem;
+            }
+            .tree-row {
+                padding: 0.35rem 0.35rem;
+                gap: 0.35em;
+            }
+            .tree-chevron, .tree-spacer {
+                width: 0.95em;
+                height: 0.95em;
+            }
             .tree-question { font-size: 0.92rem; }
             .tree-option { font-size: 0.94rem; }
+            .tree-doclink {
+                font-size: 0.66rem;
+                padding: 0.15em 0.45em;
+                letter-spacing: 0.04em;
+            }
+            /* Visited dot needs to sit closer to the row on tighter layouts */
+            .tree-row.has-unread::before {
+                left: -0.3rem;
+            }
         }
 
         /* =========================================
@@ -1575,7 +1596,7 @@
                         <h2>Szavazás</h2>
                     </header>
 
-                    <p>A korábban felsorolt lehetőségek közül érdemes úgy dönteni, hogy egy döntési fát építünk, ahol az összes elágazásnál mindenki felállít egy preferencia sorrendet.</p>
+                    <p>A korábban felsorolt lehetőségek közül érdemes úgy dönteni, hogy egy döntési fát építünk, ahol az összes elágazásnál mindenki felállít egy preferencia sorrendet. Az így kapott szavazatok alapján minden elágazásnál a legnépszerűbb lehetőség lesz a döntés, így nem aprózódnak el a szavazatok és annak ellenére, hogy az előző döntésben mást tartott valaki jobbnak a következő döntés részleteibe ugyanúgy lesz beleszólása.</p>
 
                 </div>
 
@@ -2587,7 +2608,12 @@
             if (hasChildren) {
                 const ul = document.createElement('ul');
                 ul.className = 'tree-children';
-                if (startOpen) ul.classList.add('is-open');
+                if (startOpen) {
+                    ul.classList.add('is-open');
+                } else {
+                    // Collapsed by default → mark this row as "unread"
+                    row.classList.add('has-unread');
+                }
                 node.children.forEach(child => {
                     ul.appendChild(buildNode(child, depth + 1));
                 });
@@ -2598,7 +2624,8 @@
                     const willOpen = !ul.classList.contains('is-open');
                     ul.classList.toggle('is-open', willOpen);
                     if (chevron) chevron.classList.toggle('is-open', willOpen);
-                    if (willOpen) row.classList.add('is-visited');
+                    // Clear unread once expanded; don't re-add on collapse
+                    if (willOpen) row.classList.remove('has-unread');
                 };
                 row.addEventListener('click', (e) => {
                     // If user clicked the doc link, don't toggle
