@@ -510,18 +510,181 @@
         }
 
         /* =========================================
-           PLACEHOLDER FOR DECISION TREE
+           DECISION TREE
            ========================================= */
-        .tree-placeholder {
-            border: 1.5px dashed var(--c-rule);
-            padding: 3.5rem 2rem;
-            text-align: center;
+        .tree-frame {
+            max-width: var(--wide-w);
+            margin: 1.5rem auto 0;
+            padding: 0 var(--gutter);
+        }
+        .decision-tree {
             background: var(--c-surface);
+            border: 1px solid var(--c-rule-soft);
             border-radius: 4px;
-            margin: 2rem 0;
-            color: var(--c-text-muted);
-            font-style: italic;
+            padding: 1.5rem 1.4rem 1.8rem;
+            font-family: var(--f-body);
+        }
+
+        /* A node row: chevron, label, optional doc-link, optional visited dot.
+           Children render in a nested list with a guideline on the left. */
+        .tree-node {
+            position: relative;
+            margin: 0;
+        }
+        .tree-children {
+            list-style: none;
+            margin: 0;
+            padding: 0 0 0 1.4rem;
+            border-left: 1px dashed var(--c-rule);
+            margin-left: 0.55rem;
+            display: none;
+        }
+        .tree-children.is-open { display: block; }
+
+        .tree-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            padding: 0.4rem 0.5rem;
+            margin: 0.15rem 0;
+            border-radius: 3px;
+            position: relative;
+            transition: background 0.15s ease;
+        }
+        .tree-row:hover { background: var(--c-bg-warm); }
+
+        /* Chevron: visible only on nodes with children. Click toggles expand. */
+        .tree-chevron {
+            flex: 0 0 auto;
+            width: 1.1em;
+            height: 1.1em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--c-green-mid);
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            margin-top: 0.15em;
+            border-radius: 2px;
+            transition: transform 0.18s ease, color 0.15s ease;
+        }
+        .tree-chevron:hover { color: var(--c-green-deep); }
+        .tree-chevron.is-open { transform: rotate(90deg); }
+        .tree-chevron svg { display: block; width: 0.85em; height: 0.85em; }
+
+        /* Spacer for leaf rows so labels align */
+        .tree-spacer {
+            flex: 0 0 auto;
+            width: 1.1em;
+            height: 1.1em;
+            display: inline-block;
+            margin-top: 0.15em;
+        }
+
+        /* Label area, may contain a question prompt OR an option label */
+        .tree-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            line-height: 1.45;
+        }
+        .tree-question {
             font-family: var(--f-display);
+            font-style: italic;
+            font-weight: 500;
+            color: var(--c-text-muted);
+            font-size: 0.95rem;
+        }
+        .tree-option {
+            font-family: var(--f-body);
+            color: var(--c-text);
+            font-size: 0.97rem;
+        }
+        .tree-option strong {
+            font-weight: 600;
+            color: var(--c-green-deep);
+        }
+        .tree-recommended {
+            font-style: italic;
+            color: var(--c-green);
+            font-weight: 500;
+            margin-left: 0.4em;
+            font-size: 0.85em;
+        }
+        .tree-note {
+            display: block;
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 0.82rem;
+            color: var(--c-text-muted);
+            margin-top: 0.15em;
+            line-height: 1.35;
+        }
+
+        /* Doc-link: jumps to the corresponding section in the document */
+        .tree-doclink {
+            flex: 0 0 auto;
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            color: var(--c-green);
+            background: var(--c-green-tint);
+            border: none;
+            padding: 0.18em 0.55em;
+            margin-top: 0.1em;
+            border-radius: 999px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s ease, color 0.15s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .tree-doclink:hover {
+            background: var(--c-green);
+            color: var(--c-bg);
+        }
+
+        /* Visited indicator: small dot on the left of nodes the user has expanded */
+        .tree-row.is-visited::before {
+            content: '';
+            position: absolute;
+            left: -0.55rem;
+            top: 50%;
+            width: 5px;
+            height: 5px;
+            background: var(--c-green-mid);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+        }
+
+        /* Section-target highlight on scroll-to */
+        .scroll-target-flash {
+            animation: targetFlash 1.6s ease;
+        }
+        @keyframes targetFlash {
+            0%   { background: transparent; }
+            20%  { background: var(--c-green-tint); }
+            100% { background: transparent; }
+        }
+        .option-tag.scroll-target-flash {
+            box-shadow: 0 0 0 6px var(--c-green-tint);
+            transition: box-shadow 0.4s ease;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .scroll-target-flash { animation: none; }
+            .option-tag.scroll-target-flash { box-shadow: none; }
+        }
+
+        /* Tree responsive */
+        @media (max-width: 600px) {
+            .decision-tree { padding: 1rem 0.9rem 1.3rem; }
+            .tree-children { padding-left: 1rem; margin-left: 0.5rem; }
+            .tree-row { padding: 0.5rem 0.4rem; }
+            .tree-question { font-size: 0.92rem; }
+            .tree-option { font-size: 0.94rem; }
         }
 
         /* =========================================
@@ -979,10 +1142,10 @@
                     <h3>A.) Legyenek fix párok?</h3>
 
                     <div class="option option--stub">
-                        <h4 class="option-title"><span class="option-tag">A1</span>Igen.</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-A1">A1</span>Igen.</h4>
                     </div>
                     <div class="option option--stub">
-                        <h4 class="option-title"><span class="option-tag">A2</span>Nem.</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-A2">A2</span>Nem.</h4>
                     </div>
 
                     <p>A verseny egészét alapjaiban változtatná meg, ha a erre a kérdésre a többség nemmel válaszolna, megszűnne a párválasztás súlya és sok mindenkivel ki lehetne próbálni a közös játékot. Viszont ez így egy párosban játszott egyéni versenyt jelentene, és a tenisz páros egy csapat sport. És az Umagban töltött egy hét alatt lehetőség van arra, hogy egy két játékos összeszokjon és a párosnak pont a sava borsa a csapatösszhang, ami egy meccs alatt nehezen alakulna ki, de biztos nem fejlődne arra szintre, mint egy hét közös küzdelem alatt.</p>
@@ -990,32 +1153,32 @@
                     <h3>B.) Mi alapján legyenek a párok összerakva?</h3>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">B1</span>Areiosz Pagosz, a vének tanácsa</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-B1">B1</span>Areiosz Pagosz, a vének tanácsa</h4>
                         <p>Eddig ez volt az alkalmazott módszer. Néhány kiválasztott végtelen jószándékkal önkényesen meghatározott egy ordinális sorrendet és igyekezett hasonló erejű játékosokat összepárosítani, figyelembe venni, hogy ki kivel és kivel nem szeretne együtt lenni. A döntéshez felhasználta az összes szubjektív megérzést ami létezik és összehasonlításokat végzett ezek alapján, amíg kialakult a legkevesebb elégedetlenséget kiváltó felállás.</p>
                         <p>Ennek a módszernek az előnye az, hogy bizonyítottan működik, viszont 10 páros összeállításánál a $\frac{(2n)!}{2^n \cdot n!}$ képlet alapján $\frac{20!}{2^{10} \cdot 10!}$, azaz <strong>654&nbsp;729&nbsp;075</strong> lehetséges párosítás létezik, 24 embernél <strong>316&nbsp;234&nbsp;143&nbsp;225</strong>. Ezáltal különös kihívás levezetni a párosítással elégedetlen versenyzőknek, hogy a több százmillió vagy esetleg milliárd lehetőség közül miért pont erre esett a választás és miért nem egy másikra, illetve valószínűtlen, hogy a legjobb megoldás került kiválasztásra.</p>
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">B2</span>Sorsolás</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-B2">B2</span>Sorsolás</h4>
 
-                        <h4><span class="option-tag">B2a</span>Egykalapos sorsolás</h4>
+                        <h4><span class="option-tag" id="opt-B2a">B2a</span>Egykalapos sorsolás</h4>
                         <p>Igazságos módszer, viszont az így keletkező párok a legkisebb valószínűséggel lesznek kiegyenlítettek. Két gyengébb játékos nem biztos, hogy annyira élvezné a versenyt együtt, de ha a két legerősebb összekerül lehet nekik is hiányozna a kihívás.</p>
 
-                        <h4><span class="option-tag">B2b</span>Kétkalapos sorsolás (vegyes)</h4>
+                        <h4><span class="option-tag" id="opt-B2b">B2b</span>Kétkalapos sorsolás (vegyes)</h4>
                         <p>A versenyzőket egy erős és még erősebb csoportba osztályozzuk, önbevallás/csoportos szavazás/önkény alapján és a páros úgy jön létre, hogy mindkét csapatból kiválasztunk egy-egy résztvevőt. Az így létrejövő párosok kiegyenlítettebbek, de szintén valószínűtlen az optimális megoldás feltéve ha cél, hogy minél kiegyenlítettebb legyen a verseny.</p>
 
-                        <h4><span class="option-tag">B2c</span>Kétkalapos sorsolás (kalapon belül)</h4>
+                        <h4><span class="option-tag" id="opt-B2c">B2c</span>Kétkalapos sorsolás (kalapon belül)</h4>
                         <p>A versenyzőket az előző módon kétfelé osztjuk, viszont a párosok úgy születnek, hogy a kalapon belül választunk párt, így létrejön egy erős csoport az első kalapból és egy még erősebb a másodikból. Így a csoporton belül kiegyenlített párosítások vannak és izgalmas meccsek lesznek, két csoport segítségével könnyebb a csoporton belüli különbségeket minimalizálni mint egy csoporton belül.</p>
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">B3</span>Adat alapú párosítás</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-B3">B3</span>Adat alapú párosítás</h4>
                         <p>Az Areiosz Pagosz módszerből kiemelnénk a felhalmozott bölcsességet és felhatalmaznánk a közösséget, közösen mérjék fel az erőviszonyokat. Így a lehető legtöbb helyről érkezik információ, azok, akik egymással gyakran játszanak viszonylag reális képet tudnak adni a másik játékosról és össze tudják őket hasonlítani. És minél nagyobb a részvétel, annál pontosabb képet kapunk. Az értékelések nyilvánosak, de az értékelő személye rejtett (szervezők számára ismert) és kompenzálunk az ellen, hogy senki ne szenvedjen hátrányos megkülönböztetést saját magától így egy viszonylag transzparens képet kapunk a mezőnyről a párok összeállításához. Ezt követően egy programmal optimális megoldást keresünk arra a problémára, hogy minél kisebb legyen a csoporton (vagy két csoporton) belüli erőkülönbség.</p>
 
-                        <h4><span class="option-tag">B3a</span>Közösségi ordinális sorrendállítás</h4>
+                        <h4><span class="option-tag" id="opt-B3a">B3a</span>Közösségi ordinális sorrendállítás</h4>
                         <p>Legegyszerűbb módszer, mindenki felállít egy sorrendet az általa ismert játékosokról (magát leszámítva) és ezeket összesítjük. Ez a módszer nem ad képet arról, hogy két hely között is lehet akkora erőkülönbség mint 4-5 között, akik viszonylag hasonló szinten vannak.</p>
 
-                        <h4><span class="option-tag">B3b</span>Közösségi sorrendállítás Élő pontrendszerrel</h4>
+                        <h4><span class="option-tag" id="opt-B3b">B3b</span>Közösségi sorrendállítás Élő pontrendszerrel</h4>
                         <p>Azokat a játékosokat hasonlíttatjuk össze egy programmal, akiket a szavazó ismer (Ki nyerne? Aladár vagy Béla — döntetlen megengedett). Így kialakul egy árnyaltabb rendszer rejtett Élő pontokkal (mindenkinek kérés szerint eláruljuk a sajátját), így nem csak egy egyszerű sorrend áll fel, de az erőkülönbségeket is viszonylag jól méri ezáltal pontosabb eredményt kapunk.</p>
 
                         <aside class="digression">
@@ -1077,7 +1240,7 @@
                             <p>Azért jó, mert nem kell felállítani egy abszolút mércét és ahhoz mérni mindenkit, mert elég egyszerű összehasonlításokat végezni és a sorrend kialakul magától az erőviszonnyal együtt. Nem csak a sakkban használják, de szinte az összes sportban, sportfogadásoknál, kompetitív videojátékoknál, társkereső alkalmazásokban, bor értékeléseknél, zene ajánló rendszerekben, szinte mindenhol, ahol nehéz egy abszolút értékelést felállítani, de az összehasonlítás lehetséges.</p>
                         </aside>
 
-                        <h4><span class="option-tag">B3c</span>Közösségi sorrendállítás képlettel és képesség pontozással</h4>
+                        <h4><span class="option-tag" id="opt-B3c">B3c</span>Közösségi sorrendállítás képlettel és képesség pontozással</h4>
                         <p>Egy páros ereje nem egyszerűen a két játékos erejének az összege. A valóság elképesztően bonyolult és összetett, tele van véletlennel, ismert és ismeretlen ismeretlenekkel, ezért nem lehet leírni tökéletesen. Viszont ahogy Magyarországról Umagra sem a Föld felszínét fűszál szinten tanulmányozva jutunk el, hanem egy térkép segítségével (és gps-el), ami egy modell, a valóság leegyszerűsített mása, vetülete bizonyos ígények szerint, így a páros erejére is tudunk egy összegnél jobb közelítést adni, ami olyan dinamikákat figyelembe tud venni, hogy egy erős röpte kompenzálhat egy gyenge szervát, vagy azt, hogyha a csapatban van egy fürgelábú játékos az szerencsésebb, mint ha egy sem lenne. Íme a képlet:</p>
 
                         <div class="formula-block">
@@ -1263,7 +1426,7 @@
 
                         <p>A következő kérdés, amit fel kell tenni az az, hogy rendben, papíron működik, de ki mondja meg, hogy kinek melyik képessége hány pont? És az mitől lesz pontos? Az Areiosz Pagosz módszerben néhány ember ismeretére hagyatkozunk, ezt itt is lehet alkalmazni, viszont hátrány az, hogy még ezek a központi emberek sem ismerik az egész mezőnyt. Ennél pontosabb képet ad, ha mindenkinek van lehetősége (nem kötelezettsége), hogy felállítsa ezt a képesség pontrendszert azokkal a játékosokkal, akiket ismer. Még arra is van lehetőség, hogy súlyozzuk azt, ha valaki valakivel tavaly játszott utoljára és az alapján pontozná. Ez a fajta szavazás a nyilvánosság számára rejtett névvel, de publikus pontozólapokkal működne, hogy ki lehessen szűrni az egyértelmű manipulációt és akár semmissé lehet tenni. Egy ilyen abszolút pontrendszerbe belehelyezni embereket nem könnyű és még ha nagyobb mintánál az egyéni hibák ki is oltják egymást nem biztos, hogy ez a módszer adja a legjobb képet a mezőnyről.</p>
 
-                        <h4><span class="option-tag">B3d</span>Közösségi sorrendállítás képlettel és képesség Élő pontrendszerrel</h4>
+                        <h4><span class="option-tag" id="opt-B3d">B3d</span>Közösségi sorrendállítás képlettel és képesség Élő pontrendszerrel</h4>
                         <p>Itt jön képbe a B3b-ből ismert Élő pontrendszer. Ugyanazzal a képlettel becsüljük a pár ütőképességét, mint az előbb, a különbség viszont az, hogy a képességeket nem egy 1–5-ig (vagy más hasonló) skálán mérjük, hanem Élő pontrendszerben.</p>
 
                         <p>A felmérésben résztvevőknek ilyen és ehhez hasonló kérdésekre kell csak választ adniuk, miután előszűrtük a résztvevőket aszerint, hogy ki-kinek a játékát ismeri eléggé, hogy szavazzon róla:</p>
@@ -1341,7 +1504,7 @@
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">B4</span>Gale-Shapley/Irving algoritmus</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-B4">B4</span>Gale-Shapley/Irving algoritmus</h4>
                         <p>Abban az esetben, ha elengedjük azt a feltételezést, hogy minél homogénebb mezőny kell létrehozni és teret adunk annak, hogy mindenki nyerni akar és ehhez a számára elérhető legjobb párt szeretné maga mellé létezik megoldás… Mindenki felállít egy preferenciasorrendet, hogy kivel szeretne lenni és ez alapján egy stabil párosítási algoritmus felállít egy olyan párosítást, ahol semely két játékos nem lenne szívessebben egymással, mint a kiosztott partnerével. Ez egy járható út és itt a párokkal való elégedettséget és nem a kiegyenlített párokat maximalizáljuk, de számolni kell azzal, hogy az élvonalban lévő játékosok választásától függően nem lesz kiegyenlített a mezőny.</p>
                     </div>
                 </div>
@@ -1360,15 +1523,15 @@
                     <h3>C.) Milyen legyen a meccsek lebonyolítása?</h3>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">C1</span>Két csoport, csoportmeccsek, elődöntők, döntő</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-C1">C1</span>Két csoport, csoportmeccsek, elődöntők, döntő</h4>
                         <p>Ez a megszokott, jól bevált módszer, matematikailag is kedvező, hiszen 10–12 csapat esetén ez két 5–6 fős csoportot jelent, ami $\frac{2 \cdot n(n-1)}{2}$ meccs, ami $n=5$-nél 20, $n=6$-nál 30 meccs, ami a verseny lebonyolításához felhasználható kerethez jól igazodik. Előnye, hogy jól tervezhető, ez szempont lehet ha valaki egy egész napos programot szeretne szervezni a pihenőnapjára (ami előfordulhat).</p>
 
                         <h4>Legyen egy erősebb és egy gyengébb csoport?</h4>
                         <div class="option option--stub">
-                            <h4 class="option-title"><span class="option-tag">C1a</span>Igen</h4>
+                            <h4 class="option-title"><span class="option-tag" id="opt-C1a">C1a</span>Igen</h4>
                         </div>
                         <div class="option option--stub">
-                            <h4 class="option-title"><span class="option-tag">C1b</span>Ne</h4>
+                            <h4 class="option-title"><span class="option-tag" id="opt-C1b">C1b</span>Ne</h4>
                         </div>
 
                         <p>Előnye, hogy hasonló képességű párok mérkőznek egymással a csoportmeccseken belül és minden csapatnak van esélye a győzelemre és a dobogóra csoporttól függetlenül is, azáltal, hogy az elődöntő a két csoport első két-két párosát méri össze. További hátránya vagy előnye, hogy a gyengébb csoportból egy páros garantáltan dobogós az egész mezőnyben. Ez esetleg kellemetlen lehet, ha az erősebb csoportban alulmaradtak legyőznék a gyengébb csoport dobogósát.</p>
@@ -1377,12 +1540,12 @@
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">C2</span>Egy nagy csoport</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-C2">C2</span>Egy nagy csoport</h4>
                         <p>Abban az esetben, ha minden páros minden párossal játszana 10 páros esetén 45, 11 esetén 55, 12 esetén 66 csoportmeccs lenne, ez csak úgy lenne lehetséges, ha egy meccs nem két nyert hagyományos szett lenne, hanem vagy rövidített szettek, vagy egy nyert szett. Ez dupla adminisztrációt, rengeteg cserét, csúszást, kiszámíthatatlanságot jelent, illetve a tenisz hullámvölgyeihez sem annyira jól alkalmazkodik, ezért csak akkor jó választás, ha a mindenki-mindenkivel mérkőzik elv felülírja a felsorolt hátrányokat.</p>
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">C3</span>Svájci</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-C3">C3</span>Svájci</h4>
                         <p>Svájci módszer az 1985-ös Zürich-i sakkversenyből származik, a lényege, hogy körök vannak és minden körben olyan versenyzőket/párokat sorsol össze, akiknek hasonló eredményekkel rendelkeznek. Az első körben a párosítások véletlenszerűek majd a második körben az első kör győztesei az első kör többi győztesével játszik, a vesztesek a vesztesekkel. A harmadik körben a 2–0, 1–1 és 0–2 mérlegűek játszanak egymással. Páratlan szám esetén egy valaki kimarad, ilyenkor plusz fél vagy plusz egy pontot kap, alapelv, hogy az egész verseny alatt ne forduljon elő, hogy egy valaki kétszer is kimaradjon egy körből, illetve hogy ugyanazzal mérkőzzön kétszer.</p>
 
                         <p>A svájci módszer $\log_2(n)$ kör alapján tud győztest hirdetni és egy rangsort felállítani, az önszervezés miatt ugyan nem játszik mindenki mindenkivel, viszont egy idő után hasonló erejű párosok mérkőznek, ami jó meccseket eredményez. 12 csapatnál a $\log_2(12) \approx 3{,}58$ azaz 4 kör alatt már felállna egy sorrend, ez $4 \cdot 6 = 24$ meccs. Ez benne van a keretben és nincs rá ok, hogy miért ne lehetne 5. kört csinálni, az pont 30. (10 csapatnál $\log_2(10) = 3{,}32$ tehát szintén 4 kör a minimum, de akár 5–6 is belefér a keretbe: 4→20, 5→25, 6→30 meccs.)</p>
@@ -1391,12 +1554,12 @@
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">C4</span>Americano</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-C4">C4</span>Americano</h4>
                         <p>Az americano lényege, hogy rövid meccsekről van szó (egy szett, vagy 20 perc) és egy előre meghatározott sorrend szerint cserélődnek a párok és a győzelmeket számolják. Ezt csináltuk tavaly az első/utolsó nap bemelegítő és levezető kupáján, de a párokat is cserélgettük.</p>
                     </div>
 
                     <div class="option">
-                        <h4 class="option-title"><span class="option-tag">C5</span>Mexikói</h4>
+                        <h4 class="option-title"><span class="option-tag" id="opt-C5">C5</span>Mexikói</h4>
                         <p>Ugyanaz, mint az americano, azzal a különbséggel, hogy a meccs párosítások nem egy fix sorrend szerint, hanem svájci módszerrel történnek.</p>
                     </div>
                 </div>
@@ -1414,10 +1577,12 @@
 
                     <p>A korábban felsorolt lehetőségek közül érdemes úgy dönteni, hogy egy döntési fát építünk, ahol az összes elágazásnál mindenki felállít egy preferencia sorrendet.</p>
 
-                    <div class="tree-placeholder">
-                        <p>A döntési fa interaktív vizualizációja itt fog megjelenni.</p>
-                        <p>(A fa szerkezete külön egyeztetés alatt áll — a kérdéseket még véglegesíteni kell.)</p>
-                    </div>
+                </div>
+
+                <!-- Decision tree breaks out of the narrow content column
+                     so it can use the full page width on desktop. -->
+                <div class="tree-frame">
+                    <div id="decision-tree" class="decision-tree" aria-label="Döntési fa"></div>
                 </div>
             </section>
 
@@ -2165,6 +2330,335 @@
             document.addEventListener('DOMContentLoaded', init);
         } else {
             init();
+        }
+    })();
+
+</script>
+
+<script>
+    // ============================================================
+    // DECISION TREE
+    // ============================================================
+    //
+    // Tree structure: an array of nodes, each with
+    //   - q:        question text (italic, displayed as a non-leaf prompt)
+    //   - opt:      option text (regular weight, an actual choice)
+    //   - note:     optional supplementary text shown smaller below the label
+    //   - doc:      optional doc-section anchor id (e.g., 'opt-B3' to link to <span id="opt-B3">)
+    //   - tip:      optional tooltip text (for nodes without a doc anchor)
+    //   - children: nested array of nodes
+    //
+    // Either q or opt is set (not both). Question nodes prompt; option nodes are choices.
+    //
+    (function () {
+        'use strict';
+
+        const TREE = [
+            {
+                q: 'Legyenek-e fix párok a torna teljes idejére?',
+                children: [
+                    {
+                        opt: 'Igen, fix párok',
+                        doc: 'opt-A1',
+                        children: [
+                            {
+                                q: 'Hogyan álljanak össze a párok?',
+                                children: [
+                                    {
+                                        opt: 'Areiosz Pagosz (a vének tanácsa)',
+                                        doc: 'opt-B1'
+                                    },
+                                    {
+                                        opt: 'Sorsolás',
+                                        doc: 'opt-B2',
+                                        children: [
+                                            {
+                                                q: 'Egy vagy két kalapból?',
+                                                children: [
+                                                    {
+                                                        opt: 'Egy kalap',
+                                                        doc: 'opt-B2a'
+                                                    },
+                                                    {
+                                                        opt: 'Két kalap',
+                                                        doc: 'opt-B2b',
+                                                        children: [
+                                                            {
+                                                                q: 'A kalapok beosztása mi alapján?',
+                                                                children: [
+                                                                    { opt: 'Önbevallás', tip: 'Mindenki bemondja, melyik kalapba tartozik.' },
+                                                                    { opt: 'Önkényes (vének tanácsa)', tip: 'A szervezők döntik el a beosztást.' },
+                                                                    { opt: 'Közösségi szavazás', tip: 'A résztvevők szavazata alapján.' }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        opt: 'Adat alapú párosítás',
+                                        doc: 'opt-B3',
+                                        children: [
+                                            {
+                                                q: 'Mérési módszer?',
+                                                children: [
+                                                    { opt: 'Közösségi sorrendállítás', doc: 'opt-B3a' },
+                                                    { opt: 'Élő pontrendszer', doc: 'opt-B3b' },
+                                                    { opt: 'Képlet + képesség pontozás (1–5)', doc: 'opt-B3c' },
+                                                    { opt: 'Képlet + képesség Élő pontok', doc: 'opt-B3d', recommended: true }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        opt: 'Gale-Shapley / Irving algoritmus',
+                                        doc: 'opt-B4',
+                                        children: [
+                                            {
+                                                q: 'Egy vagy két kalapból?',
+                                                children: [
+                                                    { opt: 'Egy kalap (mindenki vs. mindenki)', tip: 'A teljes mezőnyre egy preferencia-sorrend.' },
+                                                    {
+                                                        opt: 'Két kalap (csak kalapon belül)',
+                                                        tip: 'A preferencia-sorrend csak a saját kalap tagjaira vonatkozik.',
+                                                        children: [
+                                                            {
+                                                                q: 'A kalapok beosztása mi alapján?',
+                                                                children: [
+                                                                    { opt: 'Önbevallás' },
+                                                                    { opt: 'Önkényes (vének tanácsa)' },
+                                                                    { opt: 'Közösségi szavazás' }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                q: 'Milyen legyen a verseny lebonyolítása?',
+                                children: [
+                                    {
+                                        opt: 'Két csoport, csoportmeccsek + elődöntő + döntő',
+                                        doc: 'opt-C1',
+                                        children: [
+                                            {
+                                                q: 'A csoportok beosztása?',
+                                                children: [
+                                                    { opt: 'Kiegyensúlyozott csoportok', doc: 'opt-C1b' },
+                                                    {
+                                                        opt: 'Erősebb és gyengébb csoport',
+                                                        doc: 'opt-C1a',
+                                                        children: [
+                                                            {
+                                                                q: 'Hogyan dőljön el a végső győztes?',
+                                                                children: [
+                                                                    { opt: 'Csoportonként külön győztes' },
+                                                                    { opt: 'Kereszt elődöntő + közös döntő' }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    { opt: 'Egy nagy csoport (mindenki–mindenkivel)', doc: 'opt-C2' },
+                                    {
+                                        opt: 'Svájci rendszer',
+                                        doc: 'opt-C3',
+                                        children: [
+                                            {
+                                                q: 'Legyen-e döntő szakasz?',
+                                                children: [
+                                                    { opt: 'Csak svájci körök, az állás dönt' },
+                                                    { opt: 'Svájci körök + elődöntő + döntő' }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        opt: 'Nem, cserélődő párok',
+                        doc: 'opt-A2',
+                        children: [
+                            {
+                                q: 'Milyen forgási rendszer?',
+                                children: [
+                                    { opt: 'Americano (fix forgási sorrend)', doc: 'opt-C4' },
+                                    { opt: 'Mexikói (svájci alapú forgás)', doc: 'opt-C5' }
+                                ]
+                            },
+                            {
+                                q: 'Az első kör párosításai mi alapján?',
+                                children: [
+                                    { opt: 'Véletlen' },
+                                    { opt: 'Önbevallás alapján' },
+                                    { opt: 'Korábbi évek értékelései alapján (ha van)' }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // ------------------------------------------------------------
+        // RENDER
+        // ------------------------------------------------------------
+        const CHEVRON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg>';
+
+        // Default-expanded depth: nodes at depth <= INITIAL_DEPTH start expanded.
+        // Trunk question is depth 0; "fix / cserélődő" choices are depth 1;
+        // "Hogyan álljanak össze a párok?" is depth 2; etc.
+        const INITIAL_DEPTH = 2;
+
+        function buildNode(node, depth) {
+            const li = document.createElement('li');
+            li.className = 'tree-node';
+
+            const row = document.createElement('div');
+            row.className = 'tree-row';
+
+            const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+            const startOpen = hasChildren && depth < INITIAL_DEPTH;
+
+            // Chevron or spacer
+            let chevron = null;
+            if (hasChildren) {
+                chevron = document.createElement('button');
+                chevron.className = 'tree-chevron';
+                chevron.type = 'button';
+                chevron.setAttribute('aria-label', 'Kibontás / összecsukás');
+                chevron.innerHTML = CHEVRON_SVG;
+                if (startOpen) chevron.classList.add('is-open');
+                row.appendChild(chevron);
+            } else {
+                const spacer = document.createElement('span');
+                spacer.className = 'tree-spacer';
+                spacer.setAttribute('aria-hidden', 'true');
+                row.appendChild(spacer);
+            }
+
+            // Label
+            const label = document.createElement('div');
+            label.className = 'tree-label';
+            if (node.q) {
+                label.innerHTML = `<span class="tree-question">${escapeHtml(node.q)}</span>`;
+            } else if (node.opt) {
+                const recommended = node.recommended
+                    ? '<span class="tree-recommended">— ajánlott</span>'
+                    : '';
+                label.innerHTML = `<span class="tree-option">${escapeHtml(node.opt)}${recommended}</span>`;
+                if (node.tip) {
+                    const tipEl = document.createElement('span');
+                    tipEl.className = 'tree-note';
+                    tipEl.textContent = node.tip;
+                    label.appendChild(tipEl);
+                }
+            }
+            row.appendChild(label);
+
+            // Doc link (if anchor specified)
+            if (node.doc) {
+                const link = document.createElement('a');
+                link.className = 'tree-doclink';
+                link.href = '#' + node.doc;
+                link.textContent = labelFromAnchor(node.doc);
+                link.setAttribute('aria-label', `Ugrás a(z) ${labelFromAnchor(node.doc)} szekcióra`);
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    scrollToAnchor(node.doc);
+                });
+                row.appendChild(link);
+            }
+
+            li.appendChild(row);
+
+            // Children
+            if (hasChildren) {
+                const ul = document.createElement('ul');
+                ul.className = 'tree-children';
+                if (startOpen) ul.classList.add('is-open');
+                node.children.forEach(child => {
+                    ul.appendChild(buildNode(child, depth + 1));
+                });
+                li.appendChild(ul);
+
+                // Click anywhere on the row toggles, EXCEPT when clicking the doc link.
+                const toggle = () => {
+                    const willOpen = !ul.classList.contains('is-open');
+                    ul.classList.toggle('is-open', willOpen);
+                    if (chevron) chevron.classList.toggle('is-open', willOpen);
+                    if (willOpen) row.classList.add('is-visited');
+                };
+                row.addEventListener('click', (e) => {
+                    // If user clicked the doc link, don't toggle
+                    if (e.target.closest('.tree-doclink')) return;
+                    toggle();
+                });
+                row.style.cursor = 'pointer';
+            }
+
+            return li;
+        }
+
+        function labelFromAnchor(id) {
+            // 'opt-B3a' → 'B3a'
+            return id.replace(/^opt-/, '');
+        }
+
+        function scrollToAnchor(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Find the nearest .option block to scroll to (so the whole option
+            // is visible, not just the tag), or fall back to the tag itself.
+            const targetBlock = el.closest('.option, .digression, h4') || el;
+            targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Flash both the block and the tag for emphasis
+            targetBlock.classList.remove('scroll-target-flash');
+            // Force reflow so the animation can replay if the user clicks twice
+            void targetBlock.offsetWidth;
+            targetBlock.classList.add('scroll-target-flash');
+            el.classList.remove('scroll-target-flash');
+            void el.offsetWidth;
+            el.classList.add('scroll-target-flash');
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderTree() {
+            const root = document.getElementById('decision-tree');
+            if (!root) return;
+            root.innerHTML = '';
+            const ul = document.createElement('ul');
+            ul.className = 'tree-children is-open';
+            ul.style.borderLeft = 'none';
+            ul.style.paddingLeft = '0';
+            ul.style.marginLeft = '0';
+            TREE.forEach(node => ul.appendChild(buildNode(node, 0)));
+            root.appendChild(ul);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderTree);
+        } else {
+            renderTree();
         }
     })();
 
