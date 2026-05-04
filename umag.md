@@ -64,7 +64,7 @@ Azokat a játékosokat hasonlíttatjuk össze egy programmal, akiket a szavazó 
 
 **Kitérő:** Mi is az az Élő pont?
 Az 1960-as években Élő Árpád találta ki arra a problémára, hogy hogyan állítsanak fel egy rangsort a sakkozók között.
-A Ea=1/(1+10^((Rb-Ra)/400), képletben, ahol:
+A Ea=1/(1+10^((Rb-Ra)/400)), képletben, ahol:
 - Ea a várható értéke a mérkőzésnek (0 - biztos vereség, 1 - biztos győzelem, 0,34 - 34%-os győzelem)
 - Rb "B" játékos értékelése (Élő pontja)
 - Ra "A" játékos értékelése
@@ -246,7 +246,7 @@ Ezekre a kérdésekre sokkal könnyebb jól válaszolni, a háttérben pedig a m
 Végül bedobjuk korábbi képletet és a számokat egy optimalizáló programba, hogy keresse meg azokat a felállásokat, ahol a legkisebb különbség áll fent egy (vagy két) csoporton belül a párok között.
 Ez a program képes arra is, hogy befogadja azokat a feltételeket, hogy ki-kivel nem szeretne együtt lenni (általában a családi béke érdekében), de ennek is egy ésszerű határt kell szabni, hogy papíron se lehessen lehetséges, hogy az álompárját leszámítva mindenkit betegye ebbe a halmazba.
 
-B1e - Gale-Shapley/Irving algoritmus
+B4 - Gale-Shapley/Irving algoritmus
 
 Abban az esetben, ha elengedjük azt a feltételezést, hogy minél homogénebb mezőny kell létrehozni és teret adunk annak, hogy mindenki nyerni akar és ehhez a számára elérhető legjobb párt szeretné maga mellé létezik megoldás... Mindenki felállít egy preferenciasorrendet, hogy kivel szeretne lenni és ez alapján egy stabil párosítási algoritmus felállít egy olyan párosítást, ahol semely két játékos nem lenne szívessebben egymással, mint a kiosztott partnerével.
 Ez egy járható út és itt a párokkal való elégedettséget és nem a kiegyenlített párokat maximalizáljuk, de számolni kell azzal, hogy az élvonalban lévő játékosok választásától függően nem lesz kiegyenlített a mezőny.
@@ -325,5 +325,6 @@ Törekedjünk arra, hogy a párosítás fair legyen?
 Ne ()
 Igen{}
 }
+...
 
 
