@@ -525,6 +525,378 @@
         }
 
         /* =========================================
+           INTERACTIVE BLOCK (shared shell for heatmap + calculator)
+           ========================================= */
+        .interactive {
+            background: var(--c-surface);
+            border: 1px solid var(--c-rule-soft);
+            border-radius: 4px;
+            padding: 1.6rem 1.7rem 1.8rem;
+            margin: 2.25rem 0;
+        }
+        .interactive-label {
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 0.72rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--c-green);
+            margin: 0 0 0.4rem;
+        }
+        .interactive h4 {
+            margin: 0 0 0.6rem;
+            color: var(--c-green-deep);
+        }
+        .interactive p { margin-bottom: 0.9em; }
+        .interactive p.intro {
+            color: var(--c-text-soft);
+            font-size: 0.96rem;
+        }
+
+        /* =========================================
+           HEATMAP GRID
+           ========================================= */
+        .heatmaps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+            margin: 1.4rem 0 1rem;
+        }
+        @media (max-width: 720px) {
+            .heatmaps { grid-template-columns: 1fr; }
+        }
+        .heatmap {
+            background: var(--c-bg);
+            border: 1px solid var(--c-rule-soft);
+            border-radius: 3px;
+            padding: 0.9rem 1rem 1rem;
+        }
+        .heatmap-title {
+            font-family: var(--f-display);
+            font-style: italic;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--c-green-deep);
+            margin: 0 0 0.6rem;
+            text-align: center;
+            line-height: 1.25;
+        }
+        .heatmap svg { display: block; width: 100%; height: auto; }
+
+        .heatmap-cell {
+            stroke: var(--c-bg);
+            stroke-width: 1.5;
+            transition: stroke 0.15s ease;
+        }
+        .heatmap-cell:hover { stroke: var(--c-green-deep); stroke-width: 2; }
+        .heatmap-axis {
+            font-family: var(--f-mono);
+            font-size: 11px;
+            fill: var(--c-text-soft);
+            font-feature-settings: "tnum";
+        }
+        .heatmap-value {
+            font-family: var(--f-mono);
+            font-size: 11px;
+            font-weight: 500;
+            font-feature-settings: "tnum";
+        }
+        .heatmap-axis-label {
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 11px;
+            fill: var(--c-text-muted);
+        }
+
+        /* =========================================
+           CALCULATOR
+           ========================================= */
+        .calculator { margin-top: 0.5rem; }
+
+        /* Mode toggle */
+        .calc-modes {
+            display: inline-flex;
+            background: var(--c-bg);
+            border: 1px solid var(--c-rule);
+            border-radius: 999px;
+            padding: 3px;
+            margin: 0.4rem 0 1.2rem;
+            gap: 2px;
+        }
+        .calc-mode-btn {
+            font-family: var(--f-display);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            padding: 0.35rem 0.95rem;
+            background: transparent;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            color: var(--c-text-soft);
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+        .calc-mode-btn:hover { color: var(--c-green-deep); }
+        .calc-mode-btn.is-active {
+            background: var(--c-green);
+            color: var(--c-bg);
+        }
+
+        /* Player input grid */
+        .calc-players {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.9rem;
+            margin: 1rem 0 1.5rem;
+        }
+        @media (max-width: 720px) {
+            .calc-players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 420px) {
+            .calc-players { grid-template-columns: 1fr; }
+        }
+
+        .calc-player {
+            background: var(--c-bg);
+            border: 1px solid var(--c-rule-soft);
+            border-radius: 3px;
+            padding: 0.75rem 0.8rem 0.85rem;
+        }
+        .calc-player-name {
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--c-green-deep);
+            margin: 0 0 0.55rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.4em;
+        }
+        .calc-player-name .label-letter {
+            display: inline-block;
+            width: 1.4em;
+            height: 1.4em;
+            line-height: 1.4em;
+            text-align: center;
+            background: var(--c-green-tint);
+            color: var(--c-green-deep);
+            border-radius: 50%;
+            font-size: 0.85em;
+        }
+        .calc-field {
+            display: grid;
+            grid-template-columns: 1fr 5.5em;
+            align-items: center;
+            gap: 0.5em;
+            margin: 0.32rem 0;
+            font-size: 0.86rem;
+        }
+        .calc-field label {
+            font-family: var(--f-body);
+            font-style: italic;
+            color: var(--c-text-soft);
+        }
+        .calc-field input[type="number"] {
+            width: 100%;
+            padding: 0.28em 0.5em;
+            border: 1px solid var(--c-rule-soft);
+            border-radius: 3px;
+            font-family: var(--f-mono);
+            font-size: 0.92rem;
+            text-align: right;
+            background: var(--c-bg);
+            color: var(--c-text);
+            font-feature-settings: "tnum";
+            -moz-appearance: textfield;
+        }
+        .calc-field input[type="number"]::-webkit-outer-spin-button,
+        .calc-field input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        .calc-field input[type="number"]:focus {
+            outline: 2px solid var(--c-green-soft);
+            outline-offset: -1px;
+            border-color: var(--c-green-mid);
+        }
+        .calc-field input[type="number"]:hover {
+            border-color: var(--c-green-mid);
+        }
+
+        .calc-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em 0.7em;
+            margin-top: 0.6rem;
+            padding-top: 0.55rem;
+            border-top: 1px solid var(--c-rule-soft);
+        }
+        .calc-traits-elo {
+            display: block;
+            margin-top: 0.6rem;
+            padding-top: 0.55rem;
+            border-top: 1px solid var(--c-rule-soft);
+        }
+        .calc-trait-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3em;
+            font-family: var(--f-body);
+            font-size: 0.82rem;
+            color: var(--c-text-soft);
+            cursor: pointer;
+        }
+        .calc-trait-check input { accent-color: var(--c-green); margin: 0; }
+
+        /* Reset link */
+        .calc-actions {
+            margin-bottom: 1.1rem;
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 0.9rem;
+            color: var(--c-text-muted);
+        }
+        .calc-reset {
+            background: none;
+            border: none;
+            font: inherit;
+            color: var(--c-clay);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .calc-reset:hover { color: var(--c-green-deep); }
+
+        /* Disclaimer for Elo mode */
+        .calc-disclaimer {
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 0.85rem;
+            color: var(--c-text-muted);
+            background: var(--c-clay-tint);
+            border-left: 2px solid var(--c-clay);
+            padding: 0.6rem 0.9rem;
+            margin: 0.4rem 0 1.2rem;
+            border-radius: 2px;
+        }
+
+        /* Pair-result table */
+        .pair-results {
+            width: 100%;
+            border-collapse: collapse;
+            font-feature-settings: "tnum", "lnum";
+            font-variant-numeric: tabular-nums lining-nums;
+            margin-top: 0.5rem;
+        }
+        .pair-results th, .pair-results td {
+            padding: 0.5rem 0.55rem;
+            text-align: right;
+            border-bottom: 1px solid var(--c-rule-soft);
+            font-size: 0.88rem;
+        }
+        .pair-results th {
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--c-green-deep);
+            border-bottom: 1.5px solid var(--c-green);
+            padding-bottom: 0.45rem;
+        }
+        .pair-results th.left, .pair-results td.left { text-align: left; }
+        .pair-results td.pair-name {
+            font-family: var(--f-display);
+            font-weight: 600;
+            color: var(--c-green-deep);
+            white-space: nowrap;
+        }
+        .pair-results td.pair-total {
+            font-weight: 600;
+            color: var(--c-green-deep);
+        }
+        .pair-results tr:last-child td { border-bottom: none; }
+
+        /* Optimal partition section */
+        .optimal-partitions {
+            margin-top: 1.3rem;
+            padding-top: 1.1rem;
+            border-top: 1px solid var(--c-rule);
+        }
+        .optimal-partitions h5 {
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--c-green);
+            margin: 0 0 0.6rem;
+        }
+        .partition-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-variant-numeric: tabular-nums;
+        }
+        .partition-table td {
+            padding: 0.45rem 0.55rem;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed var(--c-rule-soft);
+        }
+        .partition-table tr:last-child td { border-bottom: none; }
+        .partition-table td.partition-pairs {
+            font-family: var(--f-display);
+            font-weight: 500;
+            color: var(--c-text);
+        }
+        .partition-table td.partition-spread {
+            text-align: right;
+            font-family: var(--f-mono);
+            color: var(--c-text-soft);
+            white-space: nowrap;
+        }
+        .partition-table td.partition-spread .totals {
+            display: inline-block;
+        }
+        .partition-table td.partition-spread .sep {
+            color: var(--c-text-muted);
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 0.85em;
+            margin: 0 0.3em;
+        }
+        .partition-table td.partition-spread .spread-val {
+            display: inline-block;
+            margin-left: 0.9em;
+            font-family: var(--f-display);
+            font-style: italic;
+            font-size: 0.92em;
+            color: var(--c-text-muted);
+        }
+        .partition-table tr.optimal td.partition-spread .spread-val {
+            color: var(--c-green);
+        }
+        .partition-table tr.optimal td {
+            background: var(--c-green-tint);
+            font-weight: 600;
+            color: var(--c-green-deep);
+        }
+        .partition-table tr.optimal td.partition-spread { color: var(--c-green-deep); }
+        .partition-badge {
+            display: inline-block;
+            font-family: var(--f-display);
+            font-weight: 600;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: var(--c-green);
+            color: var(--c-bg);
+            padding: 0.1em 0.55em;
+            border-radius: 999px;
+            margin-left: 0.6em;
+            vertical-align: 0.1em;
+        }
+
+        /* =========================================
            RESPONSIVE
            ========================================= */
         @media (max-width: 600px) {
@@ -532,6 +904,21 @@
             .option { padding-left: 1rem; }
             .calc-table { font-size: 0.85rem; }
             .calc-table td.calc { font-size: 0.78rem; }
+            .interactive { padding: 1.2rem 1.1rem 1.4rem; }
+            .pair-results th, .pair-results td { font-size: 0.82rem; padding: 0.4rem 0.4rem; }
+            .partition-table td { font-size: 0.85rem; padding: 0.55rem 0.4rem; white-space: normal; }
+            .partition-table td.partition-spread { white-space: normal; }
+            .partition-table td.partition-spread .spread-val {
+                display: block;
+                margin-left: 0;
+                margin-top: 0.2em;
+            }
+            .partition-badge {
+                display: inline-block;
+                margin-left: 0.4em;
+                font-size: 0.62rem;
+                padding: 0.08em 0.45em;
+            }
         }
 
         /* =========================================
@@ -857,6 +1244,16 @@
 
                         <p>A modell és a képlet támadható, mi történik, ha ketten folyton felrohannak röptézni, valaki előző este elrontotta a gyomrát egy romlott kalamarival, rosszabbul bírja a meleget. A modellnek nem az a célja, hogy tökéletesen leírja a valóságot, hanem, hogy jobban közelítse, mint az alternatív módszerek. A képleten tetszés szerint lehet alakítani, hogy még jobban leírja a valóságot.</p>
 
+                        <div class="interactive">
+                            <p class="interactive-label">Vizualizáció</p>
+                            <h4>A képlet viselkedése egyforma képességű játékosoknál</h4>
+                            <p class="intro">Az alábbi hőtérképek azt mutatják, milyen értéket ad a képlet egyes tagja, ha mindkét csapattag minden képessége egyforma (1–5 skálán). A sötétebb zöld erősebb párost jelöl. Bónuszok nélkül.</p>
+
+                            <div id="heatmaps" class="heatmaps" aria-label="Páros erőssége hőtérképek"></div>
+
+                            <p style="margin-top: 1rem; font-size: 0.92rem; color: var(--c-text-soft);">A hőtérképekből leolvasható, hogy két erős játékos saját szervája alatt a legerősebb (5–5 cella, bal felső térkép), illetve hogy gyenge játékosoknál inkább az ellenfél szervája alatt teljesít jobban a páros (1–1 cella). Az átló mentén minden szimmetrikus, hiszen az 5–5 vagy 3–3 párosban mindegy, melyik játékos tagját nevezzük az „elsőnek".</p>
+                        </div>
+
                         <p>A következő kérdés, amit fel kell tenni az az, hogy rendben, papíron működik, de ki mondja meg, hogy kinek melyik képessége hány pont? És az mitől lesz pontos? Az Areiosz Pagosz módszerben néhány ember ismeretére hagyatkozunk, ezt itt is lehet alkalmazni, viszont hátrány az, hogy még ezek a központi emberek sem ismerik az egész mezőnyt. Ennél pontosabb képet ad, ha mindenkinek van lehetősége (nem kötelezettsége), hogy felállítsa ezt a képesség pontrendszert azokkal a játékosokkal, akiket ismer. Még arra is van lehetőség, hogy súlyozzuk azt, ha valaki valakivel tavaly játszott utoljára és az alapján pontozná. Ez a fajta szavazás a nyilvánosság számára rejtett névvel, de publikus pontozólapokkal működne, hogy ki lehessen szűrni az egyértelmű manipulációt és akár semmissé lehet tenni. Egy ilyen abszolút pontrendszerbe belehelyezni embereket nem könnyű és még ha nagyobb mintánál az egyéni hibák ki is oltják egymást nem biztos, hogy ez a módszer adja a legjobb képet a mezőnyről.</p>
 
                         <h4><span class="option-tag">B3d</span>Közösségi sorrendállítás képlettel és képesség Élő pontrendszerrel</h4>
@@ -893,6 +1290,47 @@
                         <p>Ezekre a kérdésekre sokkal könnyebb jól válaszolni, a háttérben pedig a matematika elvégzi a piszkos munkát. Az így született szavazatokat egy algoritmus összesíti, majd a kapott Élő pontokat logaritmikusan normalizáljuk a képesség átlaghoz (0 és 1 körüli értékre varázsoljuk). Végül bedobjuk korábbi képletet és a számokat egy optimalizáló programba, hogy keresse meg azokat a felállásokat, ahol a legkisebb különbség áll fent egy (vagy két) csoporton belül a párok között.</p>
 
                         <p>Ez a program képes arra is, hogy befogadja azokat a feltételeket, hogy ki-kivel nem szeretne együtt lenni (általában a családi béke érdekében), de ennek is egy ésszerű határt kell szabni, hogy papíron se lehessen lehetséges, hogy az álompárját leszámítva valaki mindenkit ebbe a halmazba tegyen.</p>
+
+                        <div class="interactive calculator" id="calculator">
+                            <p class="interactive-label">Próbáljuk ki</p>
+                            <h4>Páros-erősség kalkulátor négy játékossal</h4>
+                            <p class="intro">Állítsd be négy játékos képességeit és nézd meg, hogyan rakja össze a képlet a hat lehetséges párost, illetve hogy az optimalizáló a három lehetséges párosfelosztás közül melyiket választaná. Az <strong>Élő mód</strong> a finomabb és a valósághoz közelebb álló közelítés.</p>
+
+                            <div class="calc-modes" role="tablist" aria-label="Pontozási mód">
+                                <button class="calc-mode-btn is-active" data-mode="score" role="tab" aria-selected="true">1–5 pontozás</button>
+                                <button class="calc-mode-btn" data-mode="elo" role="tab" aria-selected="false">Élő pontok</button>
+                            </div>
+
+                            <p class="calc-disclaimer" id="calc-disclaimer" hidden>Az Élő módban a számok más, logaritmikus skálán mozognak — a páros-erősségek így tömörebbnek látszanak. A relatív sorrend és az optimalizáló döntése azonban változatlan: ugyanúgy a legkisebb erőkülönbségű felállást keresi.</p>
+
+                            <p class="calc-actions">A példa egy kitalált felállást mutat különböző stílusú játékosokkal — <button type="button" class="calc-reset" id="calc-reset">alaphelyzet</button>.</p>
+
+                            <div class="calc-players" id="calc-players"></div>
+
+                            <h5 style="font-family: var(--f-display); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-green); margin: 1.4rem 0 0.5rem;">A hat lehetséges páros</h5>
+                            <div style="overflow-x: auto;">
+                                <table class="pair-results" id="pair-results">
+                                    <thead>
+                                    <tr>
+                                        <th class="left">Páros</th>
+                                        <th>1. szervája</th>
+                                        <th>2. szervája</th>
+                                        <th>Ellenfél szervája</th>
+                                        <th>Bónusz</th>
+                                        <th>Összesen</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+                            <div class="optimal-partitions">
+                                <h5>Lehetséges párosfelosztások</h5>
+                                <table class="partition-table" id="partition-results">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="option">
@@ -1073,6 +1511,666 @@
         window.addEventListener('resize', hideTooltip);
         document.addEventListener('click', hideTooltip);
     })();
+</script>
+
+<script>
+    // ============================================================
+    // PAIR-STRENGTH CALCULATOR + HEATMAPS
+    // ============================================================
+
+    (function () {
+        'use strict';
+
+        // ------------------------------------------------------------
+        // Constants
+        // ------------------------------------------------------------
+        const SCALE_MAX = 5;        // 1–5 mode
+        const ELO_MIN = 200;
+        const ELO_MAX = 3400;
+        const ELO_DEFAULT = 1000;
+        const ELO_STEP = 10;
+        const PLAYER_LABELS = ['A', 'B', 'C', 'D'];
+
+        // The cohort-mean reference for Elo normalization is computed dynamically
+        // from the four players, so each calculator-instance is self-contained.
+
+        // ------------------------------------------------------------
+        // Default preset (illustrative — different stylistic archetypes).
+        // The Élő preset is the source of truth; the score-mode preset is
+        // derived from it by linear rescaling per skill within the cohort.
+        // Realistic working range is roughly 600–1500 (centered on 1000).
+        // ------------------------------------------------------------
+        const PRESET_ELO = {
+            A: { sz: 1400, a: 1250, r:  850, fast: 1300, balanced: 1200, cunning:  900 },  // power baseliner
+            B: { sz:  800, a: 1050, r: 1450, fast:  850, balanced: 1200, cunning: 1300 },  // net veteran
+            C: { sz: 1000, a: 1200, r: 1050, fast:  950, balanced: 1250, cunning: 1000 },  // steady all-rounder
+            D: { sz: 1300, a: 1050, r: 1050, fast: 1250, balanced:  900, cunning: 1200 }   // aggressive shotmaker
+        };
+
+        // Derive the 1–5 score preset from the Élő preset by linearly rescaling
+        // each skill across the four players to [1, 5] and rounding. Traits in
+        // score mode are binary, so we threshold on the cohort mean.
+        function derivePresetFromElo(eloPreset) {
+            const skills = ['sz', 'a', 'r'];
+            const traits = ['fast', 'balanced', 'cunning'];
+            const out = {};
+            for (const k of PLAYER_LABELS) out[k] = {};
+
+            // Skills: linear rescale to 1..5 and round.
+            for (const s of skills) {
+                const vals = PLAYER_LABELS.map(k => eloPreset[k][s]);
+                const lo = Math.min.apply(null, vals);
+                const hi = Math.max.apply(null, vals);
+                const span = hi - lo || 1;
+                for (const k of PLAYER_LABELS) {
+                    const v = eloPreset[k][s];
+                    const t = (v - lo) / span;            // 0..1
+                    out[k][s] = Math.max(1, Math.min(SCALE_MAX, Math.round(1 + t * (SCALE_MAX - 1))));
+                }
+            }
+            // Traits: above cohort mean → 1, otherwise → 0.
+            for (const tr of traits) {
+                const vals = PLAYER_LABELS.map(k => eloPreset[k][tr]);
+                const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                for (const k of PLAYER_LABELS) {
+                    out[k][tr] = eloPreset[k][tr] > mean ? 1 : 0;
+                }
+            }
+            return out;
+        }
+
+        const PRESET_SCORE = derivePresetFromElo(PRESET_ELO);
+
+        // ------------------------------------------------------------
+        // State
+        // ------------------------------------------------------------
+        let mode = 'score';                 // 'score' | 'elo'
+        let players = clonePreset(PRESET_SCORE);
+
+        function clonePreset(p) {
+            const out = {};
+            for (const k of PLAYER_LABELS) out[k] = Object.assign({}, p[k]);
+            return out;
+        }
+
+        // ------------------------------------------------------------
+        // Math: normalization
+        // ------------------------------------------------------------
+        function normalizeScore(v) {
+            // 1–5 → divide by SCALE_MAX so the result sits in (0, 1]
+            return v / SCALE_MAX;
+        }
+        function normalizeElo(v, ref) {
+            // Cohort-mean centered logistic. ref is the cohort mean for that skill.
+            // Result: probability the player wins this skill exchange against an
+            // average opponent in the cohort.
+            return 1 / (1 + Math.pow(10, (ref - v) / 400));
+        }
+
+        // For traits in Elo mode we use the same logistic but apply per-trait
+        // saturation curves at the pair level (see traitTermElo below).
+
+        // ------------------------------------------------------------
+        // Math: pair-strength formula components
+        // ------------------------------------------------------------
+        // All component functions take normalized skill values in [0, 1].
+
+        function compFirstServes(sz1, a1, r2) {
+            return (sz1 + a1 + 0.5) * (r2 + 1);
+        }
+        function compSecondServes(sz2, a2, r1) {
+            return (sz2 + a2 + 0.5) * (r1 + 1);
+        }
+        function compOppServes(a1, r1, a2, r2) {
+            // Full-match value (already accounts for two opp-service rounds)
+            return (a1 + 1) * (r2 + 1) + (a2 + 1) * (r1 + 1);
+        }
+
+        // Score-mode bonus/penalty: binary traits aggregated.
+        function traitTermScore(p1, p2) {
+            const bonus = (p1.fast | 0) + (p2.fast | 0)
+                + (p1.balanced | 0) + (p2.balanced | 0)
+                + (p1.cunning | 0) + (p2.cunning | 0);
+            let penalty = 0;
+            if ((p1.fast | 0) === 0 && (p2.fast | 0) === 0) penalty += 1;
+            if ((p1.balanced | 0) === 0 && (p2.balanced | 0) === 0) penalty += 1;
+            return bonus - penalty;
+        }
+
+        // Elo-mode trait term: continuous saturation curves per trait.
+        // Each player's normalized trait value is in [0, 1] (probability they
+        // beat the cohort-average on that trait). The pair-level term combines
+        // both partners with a curve that depends on the trait's mechanics.
+        //
+        //   speed   – steep saturation: one fast partner is most of the value
+        //   balance – moderate: two balanced players are still a real upgrade
+        //   cunning – linear, no penalty: nice to have, not structural
+        //
+        // Weights are picked so a fully-traited pair contributes ~5 points
+        // (matching the score-mode bonus ceiling of 6 minus penalty floor 0).
+        function traitTermElo(p1n, p2n) {
+            // p1n, p2n are objects with normalized traits in [0,1].
+            const tFast = p1n.fast + p2n.fast;       // [0, 2]
+            const tBal  = p1n.balanced + p2n.balanced;
+            const tCun  = p1n.cunning + p2n.cunning;
+            // Steep saturation: 1 - exp(-3t). Subtract the t=0 baseline of 0.
+            const fFast = 1 - Math.exp(-3 * tFast);
+            const fBal  = 1 - Math.exp(-2 * tBal);
+            const fCun  = 0.5 * tCun;                // linear, max 1
+            // Weights so that fully-traited pair sums to ~5.
+            return 2 * fFast + 2 * fBal + 1 * fCun;
+        }
+
+        // ------------------------------------------------------------
+        // Compute one pair's full breakdown.
+        // ------------------------------------------------------------
+        function pairBreakdown(p1, p2, refs) {
+            // refs: {sz, a, r, fast, balanced, cunning} — cohort means (Elo only)
+            let n1, n2; // normalized skill objects
+
+            if (mode === 'score') {
+                n1 = {
+                    sz: normalizeScore(p1.sz),
+                    a:  normalizeScore(p1.a),
+                    r:  normalizeScore(p1.r)
+                };
+                n2 = {
+                    sz: normalizeScore(p2.sz),
+                    a:  normalizeScore(p2.a),
+                    r:  normalizeScore(p2.r)
+                };
+            } else {
+                n1 = {
+                    sz: normalizeElo(p1.sz, refs.sz),
+                    a:  normalizeElo(p1.a,  refs.a),
+                    r:  normalizeElo(p1.r,  refs.r)
+                };
+                n2 = {
+                    sz: normalizeElo(p2.sz, refs.sz),
+                    a:  normalizeElo(p2.a,  refs.a),
+                    r:  normalizeElo(p2.r,  refs.r)
+                };
+            }
+
+            const c1 = compFirstServes(n1.sz, n1.a, n2.r);
+            const c2 = compSecondServes(n2.sz, n2.a, n1.r);
+            const c3 = compOppServes(n1.a, n1.r, n2.a, n2.r);
+
+            let traits;
+            if (mode === 'score') {
+                traits = traitTermScore(p1, p2);
+            } else {
+                const t1 = {
+                    fast:     normalizeElo(p1.fast,     refs.fast),
+                    balanced: normalizeElo(p1.balanced, refs.balanced),
+                    cunning:  normalizeElo(p1.cunning,  refs.cunning)
+                };
+                const t2 = {
+                    fast:     normalizeElo(p2.fast,     refs.fast),
+                    balanced: normalizeElo(p2.balanced, refs.balanced),
+                    cunning:  normalizeElo(p2.cunning,  refs.cunning)
+                };
+                traits = traitTermElo(t1, t2);
+            }
+
+            const total = c1 + c2 + c3 + traits;
+            return { c1, c2, c3, traits, total };
+        }
+
+        // Cohort means for the four players (Elo mode)
+        function cohortRefs() {
+            const mean = (key) => (
+                (players.A[key] + players.B[key] + players.C[key] + players.D[key]) / 4
+            );
+            return {
+                sz:       mean('sz'),
+                a:        mean('a'),
+                r:        mean('r'),
+                fast:     mean('fast'),
+                balanced: mean('balanced'),
+                cunning:  mean('cunning')
+            };
+        }
+
+        // ------------------------------------------------------------
+        // Compute all six pairs and three partitions.
+        // ------------------------------------------------------------
+        function allPairs() {
+            const refs = cohortRefs();
+            const labels = PLAYER_LABELS;
+            const out = [];
+            for (let i = 0; i < 4; i++) {
+                for (let j = i + 1; j < 4; j++) {
+                    const a = labels[i], b = labels[j];
+                    const breakdown = pairBreakdown(players[a], players[b], refs);
+                    out.push({ a, b, ...breakdown });
+                }
+            }
+            return out;
+        }
+
+        function partitionsFromPairs(pairs) {
+            // For 4 players there are 3 partitions:
+            //   AB+CD, AC+BD, AD+BC
+            const get = (a, b) => pairs.find(p => (p.a === a && p.b === b) || (p.a === b && p.b === a));
+            const partitions = [
+                { p1: get('A', 'B'), p2: get('C', 'D') },
+                { p1: get('A', 'C'), p2: get('B', 'D') },
+                { p1: get('A', 'D'), p2: get('B', 'C') }
+            ];
+            partitions.forEach(part => {
+                part.spread = Math.abs(part.p1.total - part.p2.total);
+            });
+            // Sort ascending by spread so smallest is first
+            partitions.sort((x, y) => x.spread - y.spread);
+            return partitions;
+        }
+
+        // ------------------------------------------------------------
+        // FORMATTING
+        // ------------------------------------------------------------
+        function fmt(n, digits) {
+            return n.toFixed(digits == null ? 2 : digits).replace('.', ',');
+        }
+
+        // ------------------------------------------------------------
+        // HEATMAPS — render four small SVGs
+        // ------------------------------------------------------------
+        // For the heatmap we use uniform-skill players (all skills = level)
+        // so the input is just (lvl1, lvl2). No bonuses, no penalties.
+        // Always 1–5 scale (independent of calculator mode).
+        function renderHeatmaps() {
+            const container = document.getElementById('heatmaps');
+            if (!container) return;
+
+            const N = 5;
+            // Compute matrices for each component, plus the total.
+            const matFirst = [], matSecond = [], matOpp = [], matTotal = [];
+            for (let i = 1; i <= N; i++) {
+                const rowF = [], rowS = [], rowO = [], rowT = [];
+                for (let j = 1; j <= N; j++) {
+                    const n1 = i / N, n2 = j / N;
+                    // For uniform players, sz=a=r=normalized level:
+                    // first-serves: (n1+n1+0.5)(n2+1)
+                    // second-serves: (n2+n2+0.5)(n1+1)
+                    // opp-serves: (n1+1)(n2+1) + (n2+1)(n1+1) = 2(n1+1)(n2+1)
+                    const f = (n1 + n1 + 0.5) * (n2 + 1);
+                    const s = (n2 + n2 + 0.5) * (n1 + 1);
+                    const o = (n1 + 1) * (n2 + 1) + (n2 + 1) * (n1 + 1);
+                    rowF.push(f); rowS.push(s); rowO.push(o); rowT.push(f + s + o);
+                }
+                matFirst.push(rowF);
+                matSecond.push(rowS);
+                matOpp.push(rowO);
+                matTotal.push(rowT);
+            }
+
+            const titles = [
+                { title: 'Az 1. tag szervája alatt', mat: matFirst },
+                { title: 'A 2. tag szervája alatt',  mat: matSecond },
+                { title: 'Az ellenfél szervája alatt', mat: matOpp },
+                { title: 'Összesen', mat: matTotal }
+            ];
+
+            container.innerHTML = '';
+            for (const { title, mat } of titles) {
+                container.appendChild(renderOneHeatmap(title, mat, N));
+            }
+        }
+
+        function renderOneHeatmap(title, mat, N) {
+            const wrap = document.createElement('div');
+            wrap.className = 'heatmap';
+            const t = document.createElement('p');
+            t.className = 'heatmap-title';
+            t.textContent = title;
+            wrap.appendChild(t);
+
+            // Determine min/max for color scaling
+            let lo = Infinity, hi = -Infinity;
+            for (const row of mat) for (const v of row) {
+                if (v < lo) lo = v;
+                if (v > hi) hi = v;
+            }
+            // Use a generous global green ramp so cells stay readable.
+            // Light end: --c-green-tint, dark end: --c-green-deep
+            const colorAt = (v) => {
+                const t = (v - lo) / (hi - lo || 1);
+                // Interpolate between two RGB stops
+                const stops = [
+                    [226, 234, 214],  // c-green-tint
+                    [29, 74, 51]      // c-green
+                ];
+                const r = Math.round(stops[0][0] + (stops[1][0] - stops[0][0]) * t);
+                const g = Math.round(stops[0][1] + (stops[1][1] - stops[0][1]) * t);
+                const b = Math.round(stops[0][2] + (stops[1][2] - stops[0][2]) * t);
+                return `rgb(${r}, ${g}, ${b})`;
+            };
+            const textFor = (v) => {
+                // Dark text on light cells, light text on dark cells
+                const t = (v - lo) / (hi - lo || 1);
+                return t > 0.55 ? 'rgb(245, 239, 222)' : 'rgb(19, 51, 36)';
+            };
+
+            // Build SVG. Square cells, axis labels on left and bottom.
+            const PAD_L = 28, PAD_B = 28, PAD_T = 8, PAD_R = 8;
+            const CELL = 38;
+            const W = PAD_L + N * CELL + PAD_R;
+            const H = PAD_T + N * CELL + PAD_B;
+
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+            svg.setAttribute('role', 'img');
+            svg.setAttribute('aria-label', title);
+
+            // Cells
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    // Row index = first player level (top→bottom = 5→1)
+                    // Col index = second player level (left→right = 1→5)
+                    const rowVal = N - i;  // 5 at top
+                    const colVal = j + 1;
+                    const v = mat[rowVal - 1][colVal - 1];
+
+                    const x = PAD_L + j * CELL;
+                    const y = PAD_T + i * CELL;
+
+                    const rect = document.createElementNS(svgNS, 'rect');
+                    rect.setAttribute('class', 'heatmap-cell');
+                    rect.setAttribute('x', x);
+                    rect.setAttribute('y', y);
+                    rect.setAttribute('width', CELL);
+                    rect.setAttribute('height', CELL);
+                    rect.setAttribute('fill', colorAt(v));
+                    const titleEl = document.createElementNS(svgNS, 'title');
+                    titleEl.textContent = `${rowVal}–${colVal}: ${fmt(v, 2)}`;
+                    rect.appendChild(titleEl);
+                    svg.appendChild(rect);
+
+                    const text = document.createElementNS(svgNS, 'text');
+                    text.setAttribute('class', 'heatmap-value');
+                    text.setAttribute('x', x + CELL / 2);
+                    text.setAttribute('y', y + CELL / 2 + 4);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('fill', textFor(v));
+                    text.textContent = fmt(v, 1);
+                    svg.appendChild(text);
+                }
+            }
+
+            // Y-axis labels (row = first player level)
+            for (let i = 0; i < N; i++) {
+                const rowVal = N - i;
+                const tx = document.createElementNS(svgNS, 'text');
+                tx.setAttribute('class', 'heatmap-axis');
+                tx.setAttribute('x', PAD_L - 6);
+                tx.setAttribute('y', PAD_T + i * CELL + CELL / 2 + 4);
+                tx.setAttribute('text-anchor', 'end');
+                tx.textContent = String(rowVal);
+                svg.appendChild(tx);
+            }
+            // X-axis labels (col = second player level)
+            for (let j = 0; j < N; j++) {
+                const colVal = j + 1;
+                const tx = document.createElementNS(svgNS, 'text');
+                tx.setAttribute('class', 'heatmap-axis');
+                tx.setAttribute('x', PAD_L + j * CELL + CELL / 2);
+                tx.setAttribute('y', PAD_T + N * CELL + 14);
+                tx.setAttribute('text-anchor', 'middle');
+                tx.textContent = String(colVal);
+                svg.appendChild(tx);
+            }
+
+            // Axis labels
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('class', 'heatmap-axis-label');
+            yLabel.setAttribute('x', 4);
+            yLabel.setAttribute('y', PAD_T + (N * CELL) / 2);
+            yLabel.setAttribute('text-anchor', 'start');
+            yLabel.setAttribute('transform', `rotate(-90, 4, ${PAD_T + (N * CELL) / 2})`);
+            yLabel.textContent = '1. játékos';
+            svg.appendChild(yLabel);
+
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('class', 'heatmap-axis-label');
+            xLabel.setAttribute('x', PAD_L + (N * CELL) / 2);
+            xLabel.setAttribute('y', H - 4);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.textContent = '2. játékos';
+            svg.appendChild(xLabel);
+
+            wrap.appendChild(svg);
+            return wrap;
+        }
+
+        // ------------------------------------------------------------
+        // CALCULATOR — UI
+        // ------------------------------------------------------------
+        function buildPlayerInputs() {
+            const container = document.getElementById('calc-players');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (const lbl of PLAYER_LABELS) {
+                const card = document.createElement('div');
+                card.className = 'calc-player';
+                card.dataset.player = lbl;
+
+                const name = document.createElement('p');
+                name.className = 'calc-player-name';
+                name.innerHTML = `<span class="label-letter">${lbl}</span><span>játékos</span>`;
+                card.appendChild(name);
+
+                const skills = [
+                    { key: 'sz', label: 'szerva' },
+                    { key: 'a',  label: 'alapjáték' },
+                    { key: 'r',  label: 'röpte' }
+                ];
+                for (const s of skills) {
+                    card.appendChild(buildSkillField(lbl, s.key, s.label));
+                }
+
+                // Trait inputs depending on mode
+                if (mode === 'score') {
+                    const traits = document.createElement('div');
+                    traits.className = 'calc-traits';
+                    traits.dataset.role = 'traits-score';
+                    for (const t of [['fast','gyors'],['balanced','kieg.'],['cunning','ravasz']]) {
+                        const wrap = document.createElement('label');
+                        wrap.className = 'calc-trait-check';
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.dataset.player = lbl;
+                        input.dataset.field = t[0];
+                        input.checked = !!players[lbl][t[0]];
+                        input.addEventListener('change', onTraitCheckChange);
+                        wrap.appendChild(input);
+                        wrap.appendChild(document.createTextNode(t[1]));
+                        traits.appendChild(wrap);
+                    }
+                    card.appendChild(traits);
+                } else {
+                    const traits = document.createElement('div');
+                    traits.className = 'calc-traits-elo';
+                    traits.dataset.role = 'traits-elo';
+                    for (const t of [['fast','gyorsaság'],['balanced','kiegyensúly.'],['cunning','ravaszság']]) {
+                        traits.appendChild(buildSkillField(lbl, t[0], t[1]));
+                    }
+                    card.appendChild(traits);
+                }
+
+                container.appendChild(card);
+            }
+        }
+
+        function buildSkillField(player, field, labelText) {
+            const wrap = document.createElement('div');
+            wrap.className = 'calc-field';
+
+            const label = document.createElement('label');
+            label.textContent = labelText;
+            const id = `inp-${player}-${field}`;
+            label.htmlFor = id;
+            wrap.appendChild(label);
+
+            const num = document.createElement('input');
+            num.type = 'number';
+            num.id = id;
+            num.dataset.player = player;
+            num.dataset.field = field;
+            num.inputMode = 'numeric';
+            if (mode === 'score') {
+                num.min = 1;
+                num.max = SCALE_MAX;
+                num.step = 1;
+            } else {
+                num.min = ELO_MIN;
+                num.max = ELO_MAX;
+                num.step = ELO_STEP;
+            }
+            num.value = players[player][field];
+            num.addEventListener('input', onNumberInput);
+            num.addEventListener('blur', onNumberBlur);
+            wrap.appendChild(num);
+
+            return wrap;
+        }
+
+        // ------------------------------------------------------------
+        // CALCULATOR — events
+        // ------------------------------------------------------------
+        function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+        function onNumberInput(e) {
+            // Live update without clamping (we clamp on blur for less-jumpy UX).
+            const v = parseFloat(e.target.value);
+            if (Number.isNaN(v)) return;
+            const { player, field } = e.target.dataset;
+            const lo = parseFloat(e.target.min), hi = parseFloat(e.target.max);
+            if (v < lo || v > hi) return; // ignore out-of-range until blur
+            players[player][field] = v;
+            recalc();
+        }
+        function onNumberBlur(e) {
+            const { player, field } = e.target.dataset;
+            let v = parseFloat(e.target.value);
+            if (Number.isNaN(v)) v = players[player][field];
+            const lo = parseFloat(e.target.min), hi = parseFloat(e.target.max);
+            v = clamp(v, lo, hi);
+            if (mode === 'elo') v = Math.round(v / ELO_STEP) * ELO_STEP;
+            else v = Math.round(v);
+            players[player][field] = v;
+            e.target.value = v;
+            recalc();
+        }
+        function onTraitCheckChange(e) {
+            const { player, field } = e.target.dataset;
+            players[player][field] = e.target.checked ? 1 : 0;
+            recalc();
+        }
+
+        // ------------------------------------------------------------
+        // CALCULATOR — render results
+        // ------------------------------------------------------------
+        function recalc() {
+            const pairs = allPairs();
+            const partitions = partitionsFromPairs(pairs);
+            renderPairTable(pairs);
+            renderPartitions(partitions);
+        }
+
+        function renderPairTable(pairs) {
+            const tbody = document.querySelector('#pair-results tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            // Sort pairs descending by total so the strongest pair is at the top.
+            const sorted = pairs.slice().sort((a, b) => b.total - a.total);
+            for (const p of sorted) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td class="left pair-name">${p.a} + ${p.b}</td>
+                <td>${fmt(p.c1, 2)}</td>
+                <td>${fmt(p.c2, 2)}</td>
+                <td>${fmt(p.c3, 2)}</td>
+                <td>${fmt(p.traits, 2)}</td>
+                <td class="pair-total">${fmt(p.total, 2)}</td>
+            `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function renderPartitions(partitions) {
+            const tbody = document.querySelector('#partition-results tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            for (let i = 0; i < partitions.length; i++) {
+                const part = partitions[i];
+                const tr = document.createElement('tr');
+                if (i === 0) tr.classList.add('optimal');
+                const partitionText = `${part.p1.a}+${part.p1.b} vs. ${part.p2.a}+${part.p2.b}`;
+                const badge = i === 0
+                    ? '<span class="partition-badge">Optimális</span>'
+                    : '';
+                tr.innerHTML = `
+                <td class="partition-pairs">${partitionText}${badge}</td>
+                <td class="partition-spread"><span class="totals">${fmt(part.p1.total, 2)} <span class="sep">vs.</span> ${fmt(part.p2.total, 2)}</span><span class="spread-val">eltérés ${fmt(part.spread, 2)}</span></td>
+            `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // ------------------------------------------------------------
+        // CALCULATOR — mode switching & reset
+        // ------------------------------------------------------------
+        function setMode(newMode) {
+            if (newMode === mode) return;
+            mode = newMode;
+            // Reset to that mode's preset (cleanest UX — switching modes doesn't
+            // try to translate values, which would be misleading)
+            players = clonePreset(mode === 'score' ? PRESET_SCORE : PRESET_ELO);
+            document.querySelectorAll('.calc-mode-btn').forEach(btn => {
+                const isActive = btn.dataset.mode === mode;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            const disclaimer = document.getElementById('calc-disclaimer');
+            if (disclaimer) disclaimer.hidden = mode !== 'elo';
+
+            buildPlayerInputs();
+            recalc();
+        }
+        function resetToPreset() {
+            players = clonePreset(mode === 'score' ? PRESET_SCORE : PRESET_ELO);
+            buildPlayerInputs();
+            recalc();
+        }
+
+        // ------------------------------------------------------------
+        // INIT
+        // ------------------------------------------------------------
+        function init() {
+            renderHeatmaps();
+
+            if (!document.getElementById('calculator')) return;
+
+            document.querySelectorAll('.calc-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => setMode(btn.dataset.mode));
+            });
+            const resetBtn = document.getElementById('calc-reset');
+            if (resetBtn) resetBtn.addEventListener('click', resetToPreset);
+
+            buildPlayerInputs();
+            recalc();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+
 </script>
 
 </body>
