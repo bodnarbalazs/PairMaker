@@ -684,25 +684,32 @@
             font-size: 0.85em;
         }
         .calc-field {
-            display: grid;
-            grid-template-columns: 1fr 5.5em;
+            display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 0.5em;
             margin: 0.32rem 0;
             font-size: 0.86rem;
+            min-width: 0;
         }
         .calc-field label {
             font-family: var(--f-body);
             font-style: italic;
             color: var(--c-text-soft);
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .calc-field input[type="number"] {
-            width: 100%;
+            flex: 0 0 auto;
+            width: 4.4em;
             padding: 0.28em 0.5em;
             border: 1px solid var(--c-rule-soft);
             border-radius: 3px;
             font-family: var(--f-mono);
-            font-size: 0.92rem;
+            font-size: 0.86rem;
             text-align: right;
             background: var(--c-bg);
             color: var(--c-text);
@@ -1785,19 +1792,30 @@
 
             const N = 5;
             // Compute matrices for each component, plus the total.
+            // The first three heatmaps each show one service-game's contribution
+            // (one of the player's serve, the other's serve, or one of the two
+            // opponent-serve games). The "Összesen" heatmap shows the full-match
+            // total, which is c1 + c2 + 2*c3 (since opponents serve twice).
             const matFirst = [], matSecond = [], matOpp = [], matTotal = [];
             for (let i = 1; i <= N; i++) {
                 const rowF = [], rowS = [], rowO = [], rowT = [];
                 for (let j = 1; j <= N; j++) {
                     const n1 = i / N, n2 = j / N;
-                    // For uniform players, sz=a=r=normalized level:
-                    // first-serves: (n1+n1+0.5)(n2+1)
-                    // second-serves: (n2+n2+0.5)(n1+1)
-                    // opp-serves: (n1+1)(n2+1) + (n2+1)(n1+1) = 2(n1+1)(n2+1)
+                    // For uniform players, sz=a=r=normalized level.
+                    // first-serves (one serve game): (n1+n1+0.5)(n2+1)
+                    // second-serves (one serve game): (n2+n2+0.5)(n1+1)
+                    // opp-serves (one serve game, half the points each side):
+                    //   ((a1+1)(r2+1) + (a2+1)(r1+1)) / 2
+                    //   = ((n1+1)(n2+1) + (n2+1)(n1+1)) / 2
+                    //   = (n1+1)(n2+1)            for uniform players
                     const f = (n1 + n1 + 0.5) * (n2 + 1);
                     const s = (n2 + n2 + 0.5) * (n1 + 1);
-                    const o = (n1 + 1) * (n2 + 1) + (n2 + 1) * (n1 + 1);
-                    rowF.push(f); rowS.push(s); rowO.push(o); rowT.push(f + s + o);
+                    const oPerGame = (n1 + 1) * (n2 + 1);
+                    rowF.push(f);
+                    rowS.push(s);
+                    rowO.push(oPerGame);
+                    // Full match: own serve + own serve + 2 × opp serve game
+                    rowT.push(f + s + 2 * oPerGame);
                 }
                 matFirst.push(rowF);
                 matSecond.push(rowS);
@@ -1853,7 +1871,8 @@
             };
 
             // Build SVG. Square cells, axis labels on left and bottom.
-            const PAD_L = 28, PAD_B = 28, PAD_T = 8, PAD_R = 8;
+            // PAD_L includes room for the rotated y-axis label and the numeric tick labels.
+            const PAD_L = 44, PAD_B = 30, PAD_T = 8, PAD_R = 8;
             const CELL = 38;
             const W = PAD_L + N * CELL + PAD_R;
             const H = PAD_T + N * CELL + PAD_B;
@@ -1923,12 +1942,17 @@
             }
 
             // Axis labels
+            // Y label: vertical text on the far left, rotated so it reads
+            // bottom-to-top with normal character orientation.
             const yLabel = document.createElementNS(svgNS, 'text');
             yLabel.setAttribute('class', 'heatmap-axis-label');
-            yLabel.setAttribute('x', 4);
-            yLabel.setAttribute('y', PAD_T + (N * CELL) / 2);
-            yLabel.setAttribute('text-anchor', 'start');
-            yLabel.setAttribute('transform', `rotate(-90, 4, ${PAD_T + (N * CELL) / 2})`);
+            const yLabelCx = 12;
+            const yLabelCy = PAD_T + (N * CELL) / 2;
+            yLabel.setAttribute('x', yLabelCx);
+            yLabel.setAttribute('y', yLabelCy);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('dominant-baseline', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${yLabelCx}, ${yLabelCy})`);
             yLabel.textContent = '1. játékos';
             svg.appendChild(yLabel);
 
@@ -1976,7 +2000,7 @@
                     const traits = document.createElement('div');
                     traits.className = 'calc-traits';
                     traits.dataset.role = 'traits-score';
-                    for (const t of [['fast','gyors'],['balanced','kieg.'],['cunning','ravasz']]) {
+                    for (const t of [['fast','gyors'],['balanced','kiegy.'],['cunning','ravasz']]) {
                         const wrap = document.createElement('label');
                         wrap.className = 'calc-trait-check';
                         const input = document.createElement('input');
@@ -1994,7 +2018,7 @@
                     const traits = document.createElement('div');
                     traits.className = 'calc-traits-elo';
                     traits.dataset.role = 'traits-elo';
-                    for (const t of [['fast','gyorsaság'],['balanced','kiegyensúly.'],['cunning','ravaszság']]) {
+                    for (const t of [['fast','gyorsaság'],['balanced','kiegyens.'],['cunning','ravaszság']]) {
                         traits.appendChild(buildSkillField(lbl, t[0], t[1]));
                     }
                     card.appendChild(traits);
