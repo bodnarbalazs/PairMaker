@@ -1542,51 +1542,24 @@
         // from the four players, so each calculator-instance is self-contained.
 
         // ------------------------------------------------------------
-        // Default preset (illustrative — different stylistic archetypes).
-        // The Élő preset is the source of truth; the score-mode preset is
-        // derived from it by linear rescaling per skill within the cohort.
-        // Realistic working range is roughly 600–1500 (centered on 1000).
+        // Default presets (illustrative — different stylistic archetypes).
+        // The two presets are tuned independently for their respective scales
+        // so each looks realistic on its own. Switching modes loads that mode's
+        // preset and any in-progress edits are discarded.
         // ------------------------------------------------------------
         const PRESET_ELO = {
-            A: { sz: 1400, a: 1250, r:  850, fast: 1300, balanced: 1200, cunning:  900 },  // power baseliner
-            B: { sz:  800, a: 1050, r: 1450, fast:  850, balanced: 1200, cunning: 1300 },  // net veteran
-            C: { sz: 1000, a: 1200, r: 1050, fast:  950, balanced: 1250, cunning: 1000 },  // steady all-rounder
-            D: { sz: 1300, a: 1050, r: 1050, fast: 1250, balanced:  900, cunning: 1200 }   // aggressive shotmaker
+            A: { sz: 1300, a: 1250, r: 1050, fast: 1300, balanced: 1200, cunning:  950 },
+            B: { sz:  950, a: 1100, r: 1400, fast:  850, balanced: 1200, cunning: 1350 },
+            C: { sz: 1050, a: 1200, r: 1100, fast: 1000, balanced: 1250, cunning: 1000 },
+            D: { sz: 1250, a: 1100, r: 1050, fast: 1250, balanced:  950, cunning: 1200 }
         };
 
-        // Derive the 1–5 score preset from the Élő preset by linearly rescaling
-        // each skill across the four players to [1, 5] and rounding. Traits in
-        // score mode are binary, so we threshold on the cohort mean.
-        function derivePresetFromElo(eloPreset) {
-            const skills = ['sz', 'a', 'r'];
-            const traits = ['fast', 'balanced', 'cunning'];
-            const out = {};
-            for (const k of PLAYER_LABELS) out[k] = {};
-
-            // Skills: linear rescale to 1..5 and round.
-            for (const s of skills) {
-                const vals = PLAYER_LABELS.map(k => eloPreset[k][s]);
-                const lo = Math.min.apply(null, vals);
-                const hi = Math.max.apply(null, vals);
-                const span = hi - lo || 1;
-                for (const k of PLAYER_LABELS) {
-                    const v = eloPreset[k][s];
-                    const t = (v - lo) / span;            // 0..1
-                    out[k][s] = Math.max(1, Math.min(SCALE_MAX, Math.round(1 + t * (SCALE_MAX - 1))));
-                }
-            }
-            // Traits: above cohort mean → 1, otherwise → 0.
-            for (const tr of traits) {
-                const vals = PLAYER_LABELS.map(k => eloPreset[k][tr]);
-                const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-                for (const k of PLAYER_LABELS) {
-                    out[k][tr] = eloPreset[k][tr] > mean ? 1 : 0;
-                }
-            }
-            return out;
-        }
-
-        const PRESET_SCORE = derivePresetFromElo(PRESET_ELO);
+        const PRESET_SCORE = {
+            A: { sz: 5, a: 4, r: 3, fast: 1, balanced: 1, cunning: 0 },
+            B: { sz: 3, a: 4, r: 5, fast: 0, balanced: 1, cunning: 1 },
+            C: { sz: 3, a: 4, r: 4, fast: 0, balanced: 1, cunning: 0 },
+            D: { sz: 4, a: 4, r: 3, fast: 1, balanced: 0, cunning: 1 }
+        };
 
         // ------------------------------------------------------------
         // State
