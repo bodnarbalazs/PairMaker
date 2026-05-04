@@ -16,10 +16,23 @@
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
                 displayMath: [['$$', '$$'], ['\\[', '\\]']],
                 processEscapes: true,
-                tags: 'none'
+                tags: 'none',
+                macros: {
+                    // \hv{key}{x} renders x with the class "hv-var hv-<key>"
+                    // so JS can attach hover tooltips post-render.
+                    hv: ['\\class{hv-var hv-#1}{#2}', 2]
+                }
             },
             svg: { fontCache: 'global', scale: 1.05 },
-            options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+            options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    MathJax.startup.promise.then(() => {
+                        if (window.__umagAttachVarHover) window.__umagAttachVarHover();
+                    });
+                }
+            }
         };
     </script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
@@ -382,49 +395,56 @@
             overflow-x: auto;
             padding: 0.5rem 0;
         }
-        .var {
-            color: var(--c-clay);
-            font-style: italic;
-            font-family: var(--f-body);
+        /* Hoverable variables inside MathJax-rendered formulas.
+           MathJax wraps a \class{hv-var hv-<key>}{...} expression in <g class="hv-var hv-key">.
+           A subtle warm hint at rest tells readers these glyphs are interactive;
+           on hover they shift to clay and a tooltip appears.
+           pointer-events: bounding-box gives a forgiving rectangular hit area
+           so users don't have to land precisely on the glyph stroke. */
+        .formula-block { position: relative; }
+
+        mjx-container g.hv-var {
             cursor: help;
-            border-bottom: 1px dotted var(--c-clay-soft);
-            transition: background 0.18s ease, color 0.18s ease;
-            position: relative;
+            pointer-events: bounding-box;
+            transition: fill 0.18s ease, opacity 0.18s ease;
         }
-        .var:hover {
-            color: var(--c-green-deep);
-            background: var(--c-green-tint);
+        mjx-container g.hv-var > * {
+            transition: fill 0.18s ease;
         }
-        .var[data-meaning]:hover::after {
-            content: attr(data-meaning);
-            position: absolute;
-            bottom: calc(100% + 0.4em);
-            left: 50%;
-            transform: translateX(-50%);
+        mjx-container g.hv-var:hover,
+        mjx-container g.hv-var:hover > * {
+            fill: var(--c-clay);
+        }
+        /* Single floating tooltip for the whole document, positioned by JS */
+        #var-tooltip {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -100%) translateY(-10px);
             background: var(--c-green-deep);
             color: var(--c-bg);
-            padding: 0.4em 0.7em;
+            padding: 0.45em 0.75em;
             border-radius: 3px;
-            font-size: 0.78rem;
+            font-size: 0.82rem;
             font-style: normal;
             font-family: var(--f-display);
             font-weight: 500;
             white-space: nowrap;
-            z-index: 10;
+            z-index: 1000;
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(28, 31, 26, 0.18);
+            box-shadow: 0 4px 14px rgba(28, 31, 26, 0.22);
+            opacity: 0;
+            transition: opacity 0.14s ease;
         }
-        .var[data-meaning]:hover::before {
+        #var-tooltip.is-visible { opacity: 1; }
+        #var-tooltip::after {
             content: '';
             position: absolute;
-            bottom: 100%;
+            top: 100%;
             left: 50%;
             transform: translateX(-50%);
             border: 5px solid transparent;
             border-top-color: var(--c-green-deep);
-            margin-bottom: -2px;
-            z-index: 10;
-            pointer-events: none;
         }
 
         .var-legend {
@@ -464,20 +484,7 @@
             color: var(--c-green-deep);
         }
 
-        /* =========================================
-           STAGED REVEAL ON SCROLL
-           ========================================= */
-        .reveal {
-            opacity: 0;
-            transform: translateY(12px);
-            transition: opacity 0.7s ease, transform 0.7s ease;
-        }
-        .reveal.is-visible {
-            opacity: 1;
-            transform: none;
-        }
         @media (prefers-reduced-motion: reduce) {
-            .reveal { opacity: 1; transform: none; transition: none; }
             html { scroll-behavior: auto; }
         }
 
@@ -623,29 +630,29 @@
                             <p>Az 1960-as években Élő Árpád találta ki arra a problémára, hogy hogyan állítsanak fel egy rangsort a sakkozók között.</p>
 
                             <div class="formula-block">
-                                $$E_a = \frac{1}{1 + 10^{(R_b - R_a)/400}}$$
+                                $$\hv{Ea}{E_a} = \frac{1}{1 + 10^{(\hv{Rb}{R_b} - \hv{Ra}{R_a})/400}}$$
                             </div>
 
                             <p>ahol:</p>
                             <ul>
-                                <li><span class="var" data-meaning="A mérkőzés várható értéke A játékos szempontjából">$E_a$</span> a várható értéke a mérkőzésnek (0 — biztos vereség, 1 — biztos győzelem, 0,34 — 34%-os győzelem)</li>
-                                <li><span class="var" data-meaning="B játékos jelenlegi Élő pontja">$R_b$</span> „B" játékos értékelése (Élő pontja)</li>
-                                <li><span class="var" data-meaning="A játékos jelenlegi Élő pontja">$R_a$</span> „A" játékos értékelése</li>
+                                <li>$E_a$ a várható értéke a mérkőzésnek (0 — biztos vereség, 1 — biztos győzelem, 0,34 — 34%-os győzelem)</li>
+                                <li>$R_b$ „B" játékos értékelése (Élő pontja)</li>
+                                <li>$R_a$ „A" játékos értékelése</li>
                                 <li>400 egy skálázási döntés, 400 pont különbség azt jelenti, hogy az erősebb játékos 10-ből 9-szer legyőzi a gyengébbet, 200 pont 76% és 0 pont 50%</li>
                             </ul>
 
                             <p>A mérkőzés kimenetele után módosulnak a pontok:</p>
 
                             <div class="formula-block">
-                                $$R_a' = R_a + K \cdot (S_a - E_a)$$
+                                $$\hv{RaP}{R_a'} = \hv{Ra}{R_a} + \hv{K}{K} \cdot (\hv{Sa}{S_a} - \hv{Ea}{E_a})$$
                             </div>
 
                             <p>ahol</p>
                             <ul>
-                                <li><span class="var" data-meaning="A játékos új Élő pontja a meccs után">$R_a'$</span> „A" játékos új értékelése</li>
-                                <li><span class="var" data-meaning="A játékos meccs előtti Élő pontja">$R_a$</span> „A" játékos mérkőzés előtti értékelése</li>
-                                <li><span class="var" data-meaning="K-faktor: az értékelés változásának sebességét állítja be">$K$</span> az egy faktor ami azt kontrolállja, hogy milyen gyorsan változik az értékelés, nagyobb K-t ismeretlen játékosoknál érdemes használni, hogy gyorsabban beálljon a valósághoz közeli értékelés, kisebbet pedig akkor, amikor már ismert és „be van kalibrálva" így egy rossz meccs nem fogja nagyon lerontani, de sok eredmény így is változtat</li>
-                                <li><span class="var" data-meaning="A meccs tényleges eredménye A játékos szempontjából">$S_a$</span> a meccs kimenetele (1 — győzelem, 0 — vereség, 0,5 — döntetlen)</li>
+                                <li>$R_a'$ „A" játékos új értékelése</li>
+                                <li>$R_a$ „A" játékos mérkőzés előtti értékelése</li>
+                                <li>$K$ az egy faktor ami azt kontrolállja, hogy milyen gyorsan változik az értékelés, nagyobb K-t ismeretlen játékosoknál érdemes használni, hogy gyorsabban beálljon a valósághoz közeli értékelés, kisebbet pedig akkor, amikor már ismert és „be van kalibrálva" így egy rossz meccs nem fogja nagyon lerontani, de sok eredmény így is változtat</li>
+                                <li>$S_a$ a meccs kimenetele (1 — győzelem, 0 — vereség, 0,5 — döntetlen)</li>
                             </ul>
 
                             <div class="example">
@@ -653,22 +660,22 @@
                                 <p>Aladár Élő pontja 1500, Béláé 1400. Mi a mérkőzés várható kimenetele?</p>
 
                                 <div class="formula-block">
-                                    $$E_a = \frac{1}{1 + 10^{(1400-1500)/400}} = \frac{1}{1 + 10^{-0{,}25}} = \frac{1}{1 + 0{,}562} \approx 0{,}64$$
+                                    $$\hv{Ea}{E_a} = \frac{1}{1 + 10^{(1400-1500)/400}} = \frac{1}{1 + 10^{-0{,}25}} = \frac{1}{1 + 0{,}562} \approx 0{,}64$$
                                 </div>
 
                                 <p>Tehát Aladárra 64%-os, Bélára 36%-os győzelmi esély adódik.</p>
 
-                                <p>Ha Aladár nyer ($S_a = 1$), $K = 32$ mellett:</p>
+                                <p>Ha Aladár nyer ($\hv{Sa}{S_a} = 1$), $\hv{K}{K} = 32$ mellett:</p>
                                 <div class="formula-block">
-                                    $$R_a' = 1500 + 32 \cdot (1 - 0{,}64) = 1500 + 11{,}5 = 1511{,}5$$
-                                    $$R_b' = 1400 + 32 \cdot (0 - 0{,}36) = 1400 - 11{,}5 = 1388{,}5$$
+                                    $$\hv{RaP}{R_a'} = 1500 + 32 \cdot (1 - 0{,}64) = 1500 + 11{,}5 = 1511{,}5$$
+                                    $$\hv{RbP}{R_b'} = 1400 + 32 \cdot (0 - 0{,}36) = 1400 - 11{,}5 = 1388{,}5$$
                                 </div>
                                 <p>Az erősebb játékos várható győzelme csak kis pontmozgást okoz.</p>
 
-                                <p>Ha viszont Béla nyer (a meglepetés esete, $S_a = 0$):</p>
+                                <p>Ha viszont Béla nyer (a meglepetés esete, $\hv{Sa}{S_a} = 0$):</p>
                                 <div class="formula-block">
-                                    $$R_a' = 1500 + 32 \cdot (0 - 0{,}64) = 1500 - 20{,}5 = 1479{,}5$$
-                                    $$R_b' = 1400 + 32 \cdot (1 - 0{,}36) = 1400 + 20{,}5 = 1420{,}5$$
+                                    $$\hv{RaP}{R_a'} = 1500 + 32 \cdot (0 - 0{,}64) = 1500 - 20{,}5 = 1479{,}5$$
+                                    $$\hv{RbP}{R_b'} = 1400 + 32 \cdot (1 - 0{,}36) = 1400 + 20{,}5 = 1420{,}5$$
                                 </div>
                                 <p>A meglepő eredmény közel kétszer akkora pontmozgást eredményez: Béla 20,5 ponttal erősödik, Aladár ugyanennyivel gyengül. Az Élő rendszerben a pontmozgás mindig zéróösszegű — amit az egyik nyer, a másik elveszti.</p>
                             </div>
@@ -680,7 +687,11 @@
                         <p>Egy páros ereje nem egyszerűen a két játékos erejének az összege. A valóság elképesztően bonyolult és összetett, tele van véletlennel, ismert és ismeretlen ismeretlenekkel, ezért nem lehet leírni tökéletesen. Viszont ahogy Magyarországról Umagra sem a Föld felszínét fűszál szinten tanulmányozva jutunk el, hanem egy térkép segítségével (és gps-el), ami egy modell, a valóság leegyszerűsített mása, vetülete bizonyos ígények szerint, így a páros erejére is tudunk egy összegnél jobb közelítést adni, ami olyan dinamikákat figyelembe tud venni, hogy egy erős röpte kompenzálhat egy gyenge szervát, vagy azt, hogyha a csapatban van egy fürgelábú játékos az szerencsésebb, mint ha egy sem lenne. Íme a képlet:</p>
 
                         <div class="formula-block">
-                            $$\text{Páros erőssége} = (sz_1 + a_1 + 0{,}5)(r_2 + 1) + (sz_2 + a_2 + 0{,}5)(r_1 + 1) + (a_1 + 1)(r_2 + 1) + (a_2 + 1)(r_1 + 1) + \sum \text{bónusz} - \sum \text{büntető}$$
+                            $$\begin{aligned}
+                            \text{Páros erőssége} = {} & (\hv{sz1}{sz_1} + \hv{a1}{a_1} + 0{,}5)(\hv{r2}{r_2} + 1) + (\hv{sz2}{sz_2} + \hv{a2}{a_2} + 0{,}5)(\hv{r1}{r_1} + 1) \\
+                            & + (\hv{a1}{a_1} + 1)(\hv{r2}{r_2} + 1) + (\hv{a2}{a_2} + 1)(\hv{r1}{r_1} + 1) \\
+                            & + \hv{bonusz}{\sum \text{bónusz}} - \hv{buntet}{\sum \text{büntető}}
+                            \end{aligned}$$
                         </div>
 
                         <dl class="var-legend">
@@ -695,45 +706,45 @@
                         <p>Azt hivatott modellezni, hogy a tenisz meccs alatt a különböző fázisokban a páros tagjainak mely képessége érvényesül a legjobban és mivel járul hozzá a csapat teljesítményhez. Például, a képlet első tagja, amikor a csapat első tagja szervál:</p>
 
                         <div class="formula-block">
-                            $$(sz_1 + a_1 + 0{,}5)(r_2 + 1)$$
+                            $$(\hv{sz1}{sz_1} + \hv{a1}{a_1} + 0{,}5)(\hv{r2}{r_2} + 1)$$
                         </div>
 
                         <p>ahol</p>
                         <ul>
-                            <li><span class="var" data-meaning="szerva, csapat 1. tagja">$sz_1$</span> — a csapat első tagjának szervája</li>
-                            <li><span class="var" data-meaning="alapvonal-játék, csapat 1. tagja">$a_1$</span> — a csapat első tagjának az alapvonal játéka</li>
-                            <li><span class="var" data-meaning="röpte, csapat 2. tagja">$r_2$</span> — a csapat második tagjának a röptéje</li>
+                            <li>$sz_1$ — a csapat első tagjának szervája</li>
+                            <li>$a_1$ — a csapat első tagjának az alapvonal játéka</li>
+                            <li>$r_2$ — a csapat második tagjának a röptéje</li>
                             <li>0,5 és 1 azok segéd konstansok, hogy a szorzat lehetőleg egynél nagyobb legyen</li>
                         </ul>
 
-                        <p>A képlet második tagja, $(sz_2 + a_2 + 0{,}5)(r_1 + 1)$ logikailag ugyanúgy épül fel, mint az első a különbség az, hogy a csapat második tagja szervál és az első röptézik elől.</p>
+                        <p>A képlet második tagja, $(\hv{sz2}{sz_2} + \hv{a2}{a_2} + 0{,}5)(\hv{r1}{r_1} + 1)$ logikailag ugyanúgy épül fel, mint az első a különbség az, hogy a csapat második tagja szervál és az első röptézik elől.</p>
 
-                        <p>A képlet harmadik tagja, $(a_1+1)(r_2+1) + (a_2+1)(r_1+1)$ a következőképpen jön ki:</p>
+                        <p>A képlet harmadik tagja, $(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1) + (\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)$ a következőképpen jön ki:</p>
 
                         <p>Amikor az ellenfél szervál a pont felében a tenyeres oldalon lévő játékos fogad és áll az alapvonalon és a fonák oldalon lévő röptézik:</p>
 
                         <div class="formula-block">
-                            $$\frac{(a_1+1)(r_2+1)}{2}$$
+                            $$\frac{(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1)}{2}$$
                         </div>
 
                         <p>A pont másik felében pedig fordítva:</p>
 
                         <div class="formula-block">
-                            $$\frac{(a_2+1)(r_1+1)}{2}$$
+                            $$\frac{(\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)}{2}$$
                         </div>
 
-                        <p>Tehát: $\frac{(a_1+1)(r_2+1)}{2} + \frac{(a_2+1)(r_1+1)}{2}$</p>
+                        <p>Tehát: $\frac{(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1)}{2} + \frac{(\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)}{2}$</p>
 
                         <p>De egy szerva körben kétszer fordul elő, hogy az ellenfél csapata szervál, ezért ha hozzáadjuk a másik alkalmat is azt kapjuk, hogy</p>
 
                         <div class="formula-block">
-                            $$\frac{(a_1+1)(r_2+1)}{2} + \frac{(a_2+1)(r_1+1)}{2} + \frac{(a_1+1)(r_2+1)}{2} + \frac{(a_2+1)(r_1+1)}{2}$$
+                            $$\frac{(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1)}{2} + \frac{(\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)}{2} + \frac{(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1)}{2} + \frac{(\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)}{2}$$
                         </div>
 
                         <p>ami egyszerűsítve:</p>
 
                         <div class="formula-block">
-                            $$(a_1+1)(r_2+1) + (a_2+1)(r_1+1)$$
+                            $$(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1) + (\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)$$
                         </div>
 
                         <p>A $\sum \text{bónusz}$ az a csapat játékosainak bónusz pontjainak összege, három féle bónusz pont van:</p>
@@ -751,7 +762,7 @@
 
                         <p>A képlet szerint:</p>
 
-                        <h4>A pár első tagjának a szervája alatt: $(sz_1 + a_1 + 0{,}5)(r_2 + 1)$</h4>
+                        <h4>A pár első tagjának a szervája alatt: $(\hv{sz1}{sz_1} + \hv{a1}{a_1} + 0{,}5)(\hv{r2}{r_2} + 1)$</h4>
 
                         <table class="calc-table">
                             <thead>
@@ -767,7 +778,7 @@
                             </tbody>
                         </table>
 
-                        <h4>A pár második tagjának a szervája alatt: $(sz_2 + a_2 + 0{,}5)(r_1 + 1)$</h4>
+                        <h4>A pár második tagjának a szervája alatt: $(\hv{sz2}{sz_2} + \hv{a2}{a_2} + 0{,}5)(\hv{r1}{r_1} + 1)$</h4>
 
                         <table class="calc-table">
                             <thead>
@@ -783,7 +794,7 @@
                             </tbody>
                         </table>
 
-                        <h4>Az ellenfél szervája alatt: $\frac{(a_1+1)(r_2+1)}{2} + \frac{(a_2+1)(r_1+1)}{2}$ (egy szerva körre vetítve)</h4>
+                        <h4>Az ellenfél szervája alatt: $\frac{(\hv{a1}{a_1}+1)(\hv{r2}{r_2}+1)}{2} + \frac{(\hv{a2}{a_2}+1)(\hv{r1}{r_1}+1)}{2}$ (egy szerva körre vetítve)</h4>
 
                         <table class="calc-table">
                             <thead>
@@ -974,21 +985,94 @@
 
 </div>
 
-<script>
-    // Subtle scroll-triggered fade-in for major blocks
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+<!-- Floating tooltip for hoverable variables in formulas -->
+<div id="var-tooltip" role="tooltip" aria-hidden="true"></div>
 
-    document.querySelectorAll('.option, .digression, .example, .calc-table, .section-header').forEach(el => {
-        el.classList.add('reveal');
-        observer.observe(el);
-    });
+<script>
+    // Dictionary: key -> human-readable meaning shown on hover.
+    // Keys correspond to the second token of class names like "hv-sz1".
+    const VAR_MEANINGS = {
+        // Pair-strength formula
+        'sz1':  'szerva — csapat 1. tagja',
+        'sz2':  'szerva — csapat 2. tagja',
+        'a1':   'alapjáték — csapat 1. tagja',
+        'a2':   'alapjáték — csapat 2. tagja',
+        'r1':   'röpte — csapat 1. tagja',
+        'r2':   'röpte — csapat 2. tagja',
+        'bonusz':   'bónuszpontok összege (gyors, kiegyensúlyozott, ravasz)',
+        'buntet':   'büntetőpontok összege',
+
+        // Élő rendszer
+        'Ea':   'a mérkőzés várható kimenetele A játékos szempontjából',
+        'Eb':   'a mérkőzés várható kimenetele B játékos szempontjából',
+        'Ra':   'A játékos Élő pontja a meccs előtt',
+        'Rb':   'B játékos Élő pontja a meccs előtt',
+        'RaP':  'A játékos új Élő pontja a meccs után',
+        'RbP':  'B játékos új Élő pontja a meccs után',
+        'Sa':   'a meccs tényleges eredménye A szempontjából (1, 0,5, 0)',
+        'K':    'K-faktor: az értékelés változásának sebessége'
+    };
+
+    (function () {
+        const tooltip = document.getElementById('var-tooltip');
+        let hideTimer = null;
+
+        function showTooltip(target, text) {
+            tooltip.textContent = text;
+            tooltip.classList.add('is-visible');
+            tooltip.setAttribute('aria-hidden', 'false');
+            // Position above the hovered element's bounding rect
+            const r = target.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const top = r.top;
+            tooltip.style.left = cx + 'px';
+            tooltip.style.top = top + 'px';
+        }
+        function hideTooltip() {
+            tooltip.classList.remove('is-visible');
+            tooltip.setAttribute('aria-hidden', 'true');
+        }
+
+        function attachToGroup(g) {
+            if (g.__umagBound) return;
+            g.__umagBound = true;
+            // Find which hv-XYZ class identifies this variable
+            let key = null;
+            for (const c of g.classList) {
+                if (c.startsWith('hv-') && c !== 'hv-var') { key = c.slice(3); break; }
+            }
+            if (!key) return;
+            const meaning = VAR_MEANINGS[key];
+            if (!meaning) return;
+
+            g.addEventListener('mouseenter', () => {
+                clearTimeout(hideTimer);
+                showTooltip(g, meaning);
+            });
+            g.addEventListener('mouseleave', () => {
+                hideTimer = setTimeout(hideTooltip, 80);
+            });
+            // Touch: tap to show, tap elsewhere to dismiss
+            g.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showTooltip(g, meaning);
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(hideTooltip, 2200);
+            });
+        }
+
+        function scanAndAttach() {
+            document.querySelectorAll('mjx-container g.hv-var').forEach(attachToGroup);
+        }
+
+        // Run after MathJax is done (called from MathJax startup config).
+        window.__umagAttachVarHover = scanAndAttach;
+
+        // Also run again on resize so tooltip stays sensible (no-op for binding).
+        window.addEventListener('scroll', hideTooltip, { passive: true });
+        window.addEventListener('resize', hideTooltip);
+        document.addEventListener('click', hideTooltip);
+    })();
 </script>
 
 </body>
